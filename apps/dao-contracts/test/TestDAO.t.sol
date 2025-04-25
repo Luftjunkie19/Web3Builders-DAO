@@ -233,7 +233,65 @@ console.log("Proposal state after executing:", uint(governor.state(proposalId)))
 console.log("Proposer reward: ", govToken.balanceOf(alice));
 }
 
+function testProposalGetsDefeated() public {
+    vm.startPrank(carol);
+govToken.handInUserInitialTokens();
+govToken.delegate(carol);
+vm.stopPrank();
 
+
+
+vm.startPrank(alice);
+govToken.handInUserInitialTokens();
+govToken.delegate(alice);
+vm.stopPrank();
+
+vm.startPrank(bob);
+govToken.handInUserInitialTokens();
+govToken.delegate(bob);
+vm.stopPrank();
+
+vm.startPrank(alice);
+vm.roll(block.number + 1); // move to the next block
+
+uint256[] memory values = new uint256[](1);
+bytes[] memory calldatas = new bytes[](1);
+address[] memory targets = new address[](1);
+values[0] = 0;
+calldatas[0] = "0x";
+targets[0] = address(govToken);
+
+uint256 proposalId = governor.propose(targets, values, calldatas, "test");
+vm.stopPrank(); 
+
+vm.roll(block.number + governor.votingDelay() + 1);
+
+(uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) = governor.proposalVotes(proposalId);
+
+
+console.log("forVotes", forVotes);
+console.log("againstVotes", againstVotes);
+console.log("abstainVotes", abstainVotes);
+
+vm.roll(block.number + governor.votingPeriod() + 1);
+
+assert(governor.state(proposalId) == IGovernor.ProposalState.Defeated);
+
+}
+
+
+function testPunishMember(address user, uint256 amount) public {
+    vm.assume(user != address(0));
+    amount = bound(amount, 1e18, govToken.MAX_SUPPLY());
+
+    vm.prank(user);
+    govToken.rewardUser(user, amount);
+    govToken.increaseUserMaliciousActions(user);
+    govToken.increaseUserMaliciousActions(user);
+    govToken.increaseUserMaliciousActions(user);
+    govToken.punishMember(user, amount);
+    
+}
 
 function testRevertTotalSupply(uint256 amount) public {
    vm.assume(amount > 19 *10**24);
