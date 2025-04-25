@@ -7,7 +7,9 @@
   "type": "commonjs",
   "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.ts",
+    "dev": "nodemon index.ts"
   },
   "dependencies": {
     "cron": "^4.3.0",
@@ -17,7 +19,8 @@
     "helmet": "^8.1.0",
     "node-cron": "^3.0.3",
     "nodemon": "^3.1.10",
-    "redis": "^4.7.0"
+    "redis": "^4.7.0",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
