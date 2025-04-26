@@ -30,9 +30,7 @@ event UserPunished(address indexed account, uint256 indexed amount);
 
     } 
 
-fallback() external {
-  
-}
+
 
     modifier hasExceededSupply(){
       if(totalSupply() >= MAX_SUPPLY) {

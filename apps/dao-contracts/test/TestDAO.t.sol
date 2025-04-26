@@ -86,14 +86,15 @@ console.log("Votes after Increase", increasedBalanceVotes);
 uint256 currentBalance = govToken.balanceOf(alice);
 
 govToken.punishMember(alice, currentBalance - currentBalance * 1 / 201);
-govToken.delegate(alice);
+
 
 vm.roll(block.number + 2);
 
 uint256 decreasedBalanceVotes = govToken.getPastVotes(alice, block.number - 1);
 
-console.log("currentVotes", decreasedBalanceVotes);
+console.log("current Votes after decrease owned by alice:", decreasedBalanceVotes);
 
+console.log("Minimum required votes", governor.proposalThreshold());
 
 uint256[] memory values = new uint256[](1);
 
@@ -112,7 +113,6 @@ governor.propose(targets, values, calldatas, "Here is the Test Proposal !");
 vm.stopPrank();
 
 }
-
 
 function testElligibleToPropose() public {
     vm.startPrank(alice);
@@ -174,7 +174,7 @@ bytes[] memory calldatas = new bytes[](1);
 address[] memory targets = new address[](1);
 values[0] = 0;
 calldatas[0] = "0x";
-targets[0] = address(govToken);
+targets[0] = address(0);
 
 uint256 proposalId = governor.propose(targets, values, calldatas, "test");
 vm.stopPrank();
