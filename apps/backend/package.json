@@ -21,7 +21,9 @@
     "nodemon": "^3.1.10",
     "redis": "^4.7.0",
     "socket.io": "^4.8.1",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "winston": "^3.17.0",
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",

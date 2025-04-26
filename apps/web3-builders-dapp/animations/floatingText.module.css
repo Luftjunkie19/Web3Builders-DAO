@@ -1,0 +1,50 @@
+
+  .letter {
+    position: relative;
+    display: inline-block;
+   
+  }
+  
+  .letter::before {
+    content: attr(data-letter);
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: var(--hacker-green-4);
+    filter: blur(8px) brightness(1.5);
+  
+    animation: shiningLetter 3s ease-in-out infinite alternate;
+  }
+  
+  @keyframes shiningLetter {
+
+    0%, 100% {
+      filter: blur(5px);
+     
+  }
+
+  25% {
+    filter: blur(10px);
+
+  }
+  50% {
+    filter: blur(15px); 
+  }
+  75% {
+    filter: blur(20px);
+
+  }
+  80% {
+    filter: blur(15px);   
+  }
+
+  90%{
+    filter: blur(10px);
+  }
+
+  100%{
+    filter: blur(5px);
+  }
+
+
+  }
