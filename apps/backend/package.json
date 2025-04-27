@@ -12,8 +12,16 @@
     "dev": "nodemon index.ts"
   },
   "dependencies": {
+    "@discordjs/brokers": "^1.0.0",
+    "@discordjs/collection": "^1.5.3",
+    "@discordjs/core": "^2.1.0",
+    "@discordjs/proxy": "^2.1.1",
+    "@discordjs/util": "^1.1.1",
+    "@discordjs/voice": "^0.18.0",
+    "@discordjs/ws": "^1.2.2",
     "cron": "^4.3.0",
     "discord.js": "^14.18.0",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
@@ -26,8 +34,13 @@
     "zod": "^3.24.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.25.1",
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.2",
+    "@typescript-eslint/eslint-plugin": "^8.31.0",
+    "@typescript-eslint/parser": "^8.31.0",
+    "eslint": "^9.25.1",
+    "eslint-plugin-no-loops": "^0.4.0",
     "typescript": "^5.8.2"
   }
 }
