@@ -3,14 +3,14 @@ import MemberStats from '@/components/profile/MemberStats'
 import MemberTile from '@/components/profile/MemberTile'
 import { Button } from '@/components/ui/button'
 import React from 'react'
-
 type Props = {}
 
 function Page({}: Props) {
+
   return (
     <div className='w-full h-full'>
         
-        <div className=" max-w-6xl w-full mx-auto flex justify-between items-center py-6
+        <div className=" max-w-6xl w-full mx-auto flex-col lg:flex-row gap-6 flex justify-between items-center py-6 px-4
         ">
  <MemberTile/>
 <MemberDetails/>

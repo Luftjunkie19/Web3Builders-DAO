@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Poppins, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar/Navbar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import SidebarComponent from "@/components/sidebar/SidebarComponent";
 import ReduxProvider from "@/lib/providers/ReduxProvider";
 import WagmiSetupProvider
@@ -51,10 +51,12 @@ export default  function RootLayout({
   <SidebarProvider>
 
 
-    <SidebarComponent/>
+    <SidebarComponent />
+
   <div className="flex flex-col w-full h-full gap-2">
 <Navbar/>
 {children}
+
   </div>
 
 

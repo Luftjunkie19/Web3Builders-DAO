@@ -9,12 +9,13 @@ dotenv.config();
 const commands = [];
 // Grab all the command folders from the commands directory you created earlier
 const foldersPath = path.join(__dirname, 'commands');
+
 const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
 	// Grab all the command files from the commands directory you created earlier
 	const commandsPath = path.join(foldersPath, folder);
-	const commandFiles = fs.readdirSync(commandsPath).filter((file:any) => file.endsWith('.ts'));
+	const commandFiles = fs.readdirSync(commandsPath).filter((file:string) => file.endsWith('.ts'));
 	// Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
 	for (const file of commandFiles) {
 		const filePath = path.join(commandsPath, file);
@@ -30,10 +31,14 @@ for (const folder of commandFolders) {
 // Construct and prepare an instance of the REST module
 const rest = new REST().setToken(process.env.DISCORD_BOT_TOKEN || token);
 
+
 // and deploy your commands!
 (async () => {
 	try {
 		console.log(`Started refreshing ${commands.length} application (/) commands.`);
+
+		console.log(`Client ID: ${clientId}`);
+		console.log(`Guild ID: ${guildId}`);
 
 		// The put method is used to fully refresh all commands in the guild with the current set
 		const data = await rest.put(

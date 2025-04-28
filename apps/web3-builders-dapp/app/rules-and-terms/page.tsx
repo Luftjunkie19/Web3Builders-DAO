@@ -21,7 +21,7 @@ function RulesAndTermsPage({}: Props) {
     <div className='w-full h-full'>
 
 <div className="max-w-6xl w-full mx-auto flex flex-col gap-6 p-6">
-  <div className="flex gap-4 items-center self-center">
+  <div className="flex gap-2 items-center self-center">
   {"Rules And Terms".split("").map((letter, index) => (<p data-letter={letter} key={index} style={{
     animationDelay: `${index * 0.05}s`
   }} className={`text-6xl font-bold  ${floatingClasses[`letter`]} text-white tracking-widest }`}>{letter}</p>))}

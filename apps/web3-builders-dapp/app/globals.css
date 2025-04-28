@@ -9,7 +9,7 @@
   --hacker-green-3: #027353;
   --hacker-green-4: #05F29B;
   --hacker-green-5: #04BF7B;
-  
+
   --bg-black:#0D0D0D;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -68,7 +68,43 @@
       height: 0;
     }
   }
-}
+
+  --animate-aurora: aurora 8s ease-in-out infinite alternate
+;
+  @keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+    transform: rotate(-5deg) scale(0.9);}
+  25% {
+    background-position: 50% 100%;
+    transform: rotate(5deg) scale(1.1);}
+  50% {
+    background-position: 100% 50%;
+    transform: rotate(-3deg) scale(0.95);}
+  75% {
+    background-position: 50% 0%;
+    transform: rotate(3deg) scale(1.05);}
+  100% {
+    background-position: 0% 50%;
+    transform: rotate(-5deg) scale(0.9);}}
+  --animate-grid: grid 15s linear infinite;
+  @keyframes grid {
+  0% {
+    transform: translateY(-50%);}
+  100% {
+    transform: translateY(0);}}
+  --animate-ripple: ripple var(--duration,2s) ease calc(var(--i, 0)*.2s) infinite;
+  @keyframes ripple {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);}
+  50% {
+    transform: translate(-50%, -50%) scale(0.9);}}
+  --animate-orbit: orbit calc(var(--duration)*1s) linear infinite;
+  @keyframes orbit {
+  0% {
+    transform: rotate(calc(var(--angle) * 1deg)) translateY(calc(var(--radius) * 1px)) rotate(calc(var(--angle) * -1deg));}
+  100% {
+    transform: rotate(calc(var(--angle) * 1deg + 360deg)) translateY(calc(var(--radius) * 1px)) rotate(calc((var(--angle) * -1deg) - 360deg));}}}
 
 :root {
   --radius: 0.625rem;
@@ -109,11 +145,8 @@
   --hacker-green-3: #027353;
   --hacker-green-4: #05F29B;
   --hacker-green-5: #04BF7B;
-  
+
   --bg-black:#0D0D0D;
-
-
-
 
 }
 
@@ -123,7 +156,7 @@
   --hacker-green-3: #027353;
   --hacker-green-4: #05F29B;
   --hacker-green-5: #04BF7B;
-  
+
   --bg-black:#0D0D0D;
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
@@ -168,7 +201,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
- 
+
   .dark {
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -183,9 +216,107 @@
 
 body {
   font-family: var(--font-poppins);
-  
+
 }
 
 p::-webkit-scrollbar, div::-webkit-scrollbar{
   display: none;
 }
+
+body:after{
+  content: "";
+  position: fixed;
+  top: 75%;
+  left: 15%;
+  width: 100%;
+  height: 16rem;
+  background: radial-gradient(circle, rgba(5, 240, 154, 0.631) 21%, rgba(255, 255, 255, 0.494) 52%, rgba(4, 190, 88, 0.711) 82%);
+  border-radius: 50%;
+  z-index: -1;
+  filter: blur(240px);
+}
+
+@keyframes gradient-flow {
+  0% {
+
+    background-position: 0% 50%;
+  }
+
+  25% {
+    background-position: 50% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  75% {
+    background-position: 75% 15%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes first-section-text {
+  0% {
+    
+    width: 0%;
+
+  }
+
+  100% {
+  
+    width: 100%;
+  }
+  
+}
+
+
+
+.text-animated-first-section {
+position: relative;
+top: 0%;
+left: 0%;
+overflow: hidden;
+animation: first-section-text 1s ease-in-out forwards;
+
+}
+
+.text-animated-first-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--hacker-green-4);
+  z-index: -1;
+  border-radius: 0.5rem;
+  animation: first-section-text 1s ease-in-out forwards;
+}
+
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--hacker-green-1), var(--hacker-green-2), var(--hacker-green-3), var(--hacker-green-4), var(--hacker-green-5));
+  background-clip: text;
+  text-fill-color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-flow 2s ease-in-out infinite;
+
+}
+
+@layer base {
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;}
+  body {
+    @apply bg-background text-foreground;}}

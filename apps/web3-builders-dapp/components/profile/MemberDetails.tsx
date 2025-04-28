@@ -8,7 +8,7 @@ function MemberDetails({}: Props) {
     <div
     className='
     bg-zinc-800 max-w-3xl w-full rounded-lg flex flex-col gap-3 p-2 border border-(--hacker-green-4)
-    h-64
+ min-h-64 
     '    
     >
 <div className="
@@ -24,18 +24,9 @@ flex items-center gap-2 self-center
     </span>
 </div>
 
-<div className="
-
-flex items-center gap-6 justify-center
-
-">
-    <div className="
-    bg-zinc-900 px-2
-    py-6
-    text-white rounded-md max-w-1/3 w-full
-    flex justify-between
-     items-center gap-2 flex-col
-    ">
+<div className="flex items-center flex-col md:flex-row gap-6 justify-center">
+    
+    <div className="bg-zinc-900 px-2 py-6  max-w-64 text-white rounded-md lg:max-w-1/3  w-full flex justify-between items-center gap-2 flex-col">
 
 <LucideVote
 size={24}
@@ -62,8 +53,8 @@ font-bold
 
     <div className="
     bg-zinc-900 px-2
-    py-6
-    text-white rounded-md max-w-1/3 w-full
+    py-6 max-w-64
+    text-white rounded-md lg:max-w-1/3 w-full
     flex justify-between
      items-center gap-2 flex-col
     ">
@@ -92,7 +83,7 @@ font-bold
     <div className="
       bg-zinc-900 px-2
     py-6
-    text-white rounded-md max-w-1/3 w-full
+    text-white rounded-md lg:max-w-1/3 max-w-64 w-full
     flex justify-between
      items-center gap-2 flex-col
     ">

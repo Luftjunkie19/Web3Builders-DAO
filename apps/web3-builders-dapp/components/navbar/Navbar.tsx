@@ -6,6 +6,8 @@ import { Button } from '../ui/button';
 
 import { useRouter } from 'next/navigation';
 import { ConnectKitButton } from 'connectkit';
+import { SidebarTrigger } from '../ui/sidebar';
+import Link from 'next/link';
 
 
 type Props = {}
@@ -22,11 +24,11 @@ const discordOAuthURL = `https://discord.com/api/oauth2/authorize?client_id=${pr
     z-[9999]
     '>
 
-<div className="flex items-center justify-between gap-2 w-full max-w-7xl">
-        <p className='text-2xl text-(--hacker-green-4) font-bold'>Web3 Builders DAO</p>
+<div className="flex  items-center justify-between gap-2 w-full max-w-7xl">
+        <Link href={'/'} className=' @min-xs:text-xl lg:text-2xl text-(--hacker-green-4) font-bold'>Web3 Builders DAO</Link>
 
 
-<div className="flex justify-between items-center gap-3">
+<div className=" justify-between hidden lg:flex  items-center gap-3">
 <Button className='cursor-pointer
  bg-(--hacker-green-4) hover:bg-(--hacker-green-5)
  hover:text-white
@@ -48,7 +50,13 @@ const discordOAuthURL = `https://discord.com/api/oauth2/authorize?client_id=${pr
   variant={'secondary'}>About Us</Button>
 </div>
 
-<ConnectKitButton />
+<div className="flex items-end gap-2">
+  <div className="hidden md:block">
+
+<ConnectKitButton  />
+  </div>
+<SidebarTrigger className='hover:bg-(--hacker-green-4) cursor-pointer bg-zinc-800 text-white'/>
+</div>
 {/* <Button variant='default' onClick={
   ()=>{
     router.replace(

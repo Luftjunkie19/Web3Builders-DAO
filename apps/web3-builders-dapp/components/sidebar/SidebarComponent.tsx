@@ -17,6 +17,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import ProposalModal from '../modal/ProposalModal'
+import { ConnectKitButton } from 'connectkit'
 
 
  function SidebarComponent({}: Props) {
@@ -39,6 +40,11 @@ const items = [
       url: "/settings",
       icon: UserCog2Icon,
     },
+    {
+      title: "About Us",
+      url: "/about-us",
+      icon: User,
+    },
    
 
 
@@ -48,10 +54,9 @@ const items = [
   return (
     <>
         <Sidebar>
-        <SidebarContent className='text-white flex flex-col justify-between bg-zinc-800'>
+        <SidebarContent className='text-white flex flex-col justify-between py-16 md:pt-0 bg-zinc-800'>
       
           <SidebarGroup className='flex flex-col gap-2'>
-            <SidebarGroupLabel className='text-xl font-semibold text-(--hacker-green-4)'>Web3 Builders</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {items.map((item) => (
@@ -79,7 +84,11 @@ const items = [
             </SidebarGroupContent>
           </SidebarGroup>
 
+<div className="md:hidden self-center">
+<ConnectKitButton  />
+</div>
 
+         
          
         </SidebarContent>
       </Sidebar>
