@@ -11,7 +11,7 @@ error InvalidUserPropose(string message);
 error InvalidUserVote(string message);
 
 event ProposalCreated(
-        uint256 id,
+        bytes32 id,
         address proposer
     );
 
@@ -26,7 +26,7 @@ event ProposalExecuted(
     );
 
 event ProposalVoted(
-        uint256 id,
+        bytes32 id,
         address voter,
         uint256 weight,
         StandardProposalVote standardVoteOption,
@@ -119,9 +119,9 @@ struct Proposal{
     }
 
 mapping(UrgencyLevel => uint256) public urgencyQuorum;
-mapping(uint256 => Proposal) public proposals;
-mapping(uint256=> Vote) public proposalIdToVote; // proposalId to vote
-mapping(uint256 => mapping(address => Vote)) public proposalIdToVotes;
+mapping(bytes32 => Proposal) public proposals;
+mapping(bytes32=> Vote) public proposalIdToVote; // proposalId to vote
+mapping(bytes32 => mapping(address => Vote)) public proposalIdToVotes;
 mapping(address => mapping(uint256 => Vote)) public userVotes; // user address to proposalId to vote
 mapping(address => mapping(uint256 => Vote)) public userDelegatedVotes; // user address to proposalId to vote
 mapping(address=> Proposal[]) public userProposals; // user address to proposalId to vote
@@ -157,7 +157,7 @@ constructor(IVotes _token){
         return govToken;
     }
 
-    function getProposal(uint256 proposalId) public view returns (Proposal memory) {
+    function getProposal(bytes32 proposalId) public view returns (Proposal memory) {
         return proposals[proposalId];
     }
 
@@ -182,35 +182,72 @@ constructor(IVotes _token){
         StandardProposalVote standardVoteOption,
         CustomProposalVote customVoteOption
     ) public eligibleToPropose {
-    
+        proposalCount++;
+
+        bytes32 proposalId = keccak256(abi.encodePacked(proposalCount,description, targets, values, msg.sender, block.timestamp));
+
+        Proposal memory proposal = Proposal(
+            proposalId,
+            msg.sender,
+            description,
+            block.number + 1, // start block
+            block.number + 100, // end block
+            VotingOptionsType.Standard,
+            100, // voting period
+            1, // voting delay
+            urgencyLevel,
+            0, // proposal vote count
+            0, // custom vote count
+            0, // proposal vote weight
+            0, // custom vote weight
+            standardVoteOption,
+            customVoteOption,
+            ProposalState.Pending,
+            targets,
+            values,
+            calldatas,
+            false, // executed
+            false, // canceled
+            0, // queuedAt
+            0, // executedAt
+            0 // canceledAt
+        ); 
+
+        proposals[proposalId] = proposal;
+        userProposals[msg.sender].push(proposal);
+        
+        emit ProposalCreated(proposalId, msg.sender);
     }
 
     function castVote(
-        uint256 proposalId,
+        bytes32 proposalId,
         StandardProposalVote standardVoteOption,
         CustomProposalVote customVoteOption,
         string calldata reason,
         bytes32 extraData
     ) public {
+        govToken.delegate(msg.sender);
+        uint256 weight = govToken.getVotes(msg.sender);
+
+proposalIdToVote[proposalId].weight = weight;
+        proposalIdToVote[proposalId].standardVoteOption = standardVoteOption;
+        proposalIdToVote[proposalId].customVoteOption = customVoteOption;
+        proposalIdToVote[proposalId].reason = reason;
+        proposalIdToVote[proposalId].extraData = extraData;
+        proposalIdToVote[proposalId].isVoted = true;
+        proposalIdToVote[proposalId].timestamp = block.timestamp;
+
+        proposalIdToVotes[proposalId][msg.sender] = proposalIdToVote[proposalId];
+        emit ProposalVoted(proposalId, msg.sender, weight, standardVoteOption, customVoteOption);
     
     }
 
-    function delegateVote(
-        uint256 proposalId,
-        address delegatee,
-        StandardProposalVote standardVoteOption,
-        CustomProposalVote customVoteOption,
-        string calldata reason,
-        bytes32 extraData
-    ) public {
-  
-    }
+    function queueProposal(bytes32 proposalId) public  {
 
-    function queueProposal(uint256 proposalId) public  {
     
     }
 
-    function executeProposal(uint256 proposalId) public {
+    function executeProposal(bytes32 proposalId) public {
     
     }
 }
