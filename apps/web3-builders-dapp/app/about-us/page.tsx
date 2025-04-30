@@ -129,7 +129,7 @@ p-3
   '>The Founders</p>
   <p>Let's introduce the Founders of Web3Builders, the greatest community of developers, builders and enthusiasts of Web3. Real heros and not just sweet-unicorny talkers 🥰</p>
 
-  <FocusCards cards={[{'title':'Akash Dutta', src:'/founders/Akash.jpg', description:'Founder of Web3Builders, Idea Maker, Web3 Enthusiast'}, {'src':'/founders/luftjunkie-1.jpg', title:'Luftjunkie', description:"Co-Founder of Web3Builders, DAO Creator, Fullstack Blockchain Developer"},{'title':'Arcane', src:'/founders/Arcane-Jose.jpg', description:'CTO of Web3Builders, Senior Blockchain Developer, Web3 Enthusiast'}]}/>
+  <FocusCards cards={[{'title':'Akash Dutta', src:'/founders/Akash.jpg', description:'Founder of Web3Builders, Idea Maker, Web3 Enthusiast'}, {'src':'/founders/Luftie-2.jpg', title:'Luftjunkie', description:"Co-Founder of Web3Builders, DAO Creator, Fullstack Blockchain Developer"},{'title':'Arcane', src:'/founders/Arcane-Jose.jpg', description:'CTO of Web3Builders, Senior Blockchain Developer, Web3 Enthusiast'}]}/>
 
 </div>
 

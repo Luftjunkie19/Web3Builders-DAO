@@ -9,9 +9,10 @@ module.exports = {
     async execute(interaction:any
 ) {
 try{
-    await interaction.followUp(`The owner of this server is: ${interaction.guild?.members.me}`);
+    await interaction.followUp(`The owner of this server is: ${interaction.member.user.globalName}`);
 }
 catch(error) {
+    console.log("Start of the world", interaction.member.user.globalName, "End of the world");
     console.error(`Error executing ${interaction}:`, error);
     }
 }

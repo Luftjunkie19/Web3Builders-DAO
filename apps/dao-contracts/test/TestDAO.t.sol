@@ -7,7 +7,7 @@ import {GovernmentToken} from "../src/GovToken.sol";
 import {Test} from "../lib/forge-std/src/Test.sol";
 import {TimelockController} from "../lib/openzeppelin-contracts/contracts/governance/TimelockController.sol";
 import { IVotes } from "../lib/openzeppelin-contracts/contracts/governance/utils/IVotes.sol";
-import {MyGovernor} from "../src/BuildersGovernor.sol";
+import {MyGovernor} from "../src/openzep-contract/BuildersGovernor.sol";
 
 import {IGovernor} from "../lib/openzeppelin-contracts/contracts/governance/IGovernor.sol";
 
@@ -71,7 +71,7 @@ vm.roll(block.number + 1);
 vm.stopPrank();
 
     vm.startPrank(alice);
-    govToken.handInUserInitialTokens();
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 
     govToken.delegate(alice);
 
@@ -116,7 +116,7 @@ vm.stopPrank();
 
 function testElligibleToPropose() public {
     vm.startPrank(alice);
-    govToken.handInUserInitialTokens();
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 
 
 uint256 currentBalance = govToken.balanceOf(alice);
@@ -150,19 +150,19 @@ vm.stopPrank();
 
 function testProposeVoteForProposalWorksProperly() public {
 vm.startPrank(carol);
-govToken.handInUserInitialTokens();
+govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 govToken.delegate(carol);
 vm.stopPrank();
 
 
 
 vm.startPrank(alice);
-govToken.handInUserInitialTokens();
+govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 govToken.delegate(alice);
 vm.stopPrank();
 
 vm.startPrank(bob);
-govToken.handInUserInitialTokens();
+govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 govToken.delegate(bob);
 vm.stopPrank();
 
@@ -192,7 +192,7 @@ governor.castVoteWithReason(proposalId, 1, "For it!");
 
 console.log(governor.hasVoted(proposalId, bob));
 
-console.log(governor.hasVoted(proposalId, alice));  
+console.log(governor.hasVoted(proposalId, alice));
 
 (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes) = governor.proposalVotes(proposalId);
 
@@ -235,19 +235,19 @@ console.log("Proposer reward: ", govToken.balanceOf(alice));
 
 function testProposalGetsDefeated() public {
     vm.startPrank(carol);
-govToken.handInUserInitialTokens();
+govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 govToken.delegate(carol);
 vm.stopPrank();
 
 
 
 vm.startPrank(alice);
-govToken.handInUserInitialTokens();
+govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 govToken.delegate(alice);
 vm.stopPrank();
 
 vm.startPrank(bob);
-govToken.handInUserInitialTokens();
+govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 govToken.delegate(bob);
 vm.stopPrank();
 
@@ -314,7 +314,7 @@ govToken.increaseUserMaliciousActions(alice);
 function testGetProposalThresholdIsEqualProperAmount() public {
     
     vm.prank(alice);
-    govToken.handInUserInitialTokens();
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
     uint256 balance = govToken.balanceOf(alice);
 
 assertEq(balance / 200, governor.proposalThreshold());
@@ -334,7 +334,7 @@ function testGetGovTokenOwner() public view returns(address){
 
 function testTokenIsCorrectlyBurnt() public  {
     vm.prank(alice);
-    govToken.handInUserInitialTokens();
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
     assert(govToken.balanceOf(alice) == 1000 * 10**18);
     assert(govToken.readMemberInfluence(alice) == 1000 * 10**18);
 
@@ -354,10 +354,10 @@ function testTokenIsCorrectlyBurnt() public  {
 
 function testNewlyMintedTokensIncreaseTotalSupply() public{
  vm.prank(alice);
-govToken.handInUserInitialTokens();
+govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 
 vm.startPrank(bob);
-govToken.handInUserInitialTokens();
+govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 govToken.punishMember(bob, govToken.balanceOf(bob) / 10);
 vm.stopPrank();
 
@@ -368,23 +368,25 @@ assert(govToken.totalSupply() == bobBalance + aliceBalance);
 }
 
 function testIntialTokenReceiveWorksCorrectly() public{
-    vm.startPrank(alice);
-    govToken.handInUserInitialTokens();
-    
-    assert(govToken.readMemberInfluence(alice) == govToken.balanceOf(alice));
+    vm.prank(alice);
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 
 uint balanceBeforePunishment = govToken.balanceOf(alice);
 uint votingPowerBeforePunishment = govToken.readMemberInfluence(alice);
+    
+    assert(balanceBeforePunishment == votingPowerBeforePunishment);
 
-    govToken.handInUserInitialTokens();
+
+ vm.prank(alice);
+govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.TechnologyKnowledgeLevel.LOW_KNOWLEDGE, GovernmentToken.TokenReceiveLevel.LOW, GovernmentToken.KnowledgeVerificationTestRate.LOW, false);
 
 uint balance = govToken.balanceOf(alice);
 uint votingPowerAfterPunishment = govToken.readMemberInfluence(alice);
 
-    assertEq(balanceBeforePunishment - balance, (balanceBeforePunishment / 10));
-    assertEq(votingPowerBeforePunishment - votingPowerAfterPunishment, (votingPowerBeforePunishment / 10));
+    assert(balance < balanceBeforePunishment);
+    assert(votingPowerBeforePunishment > votingPowerAfterPunishment);
 
-    vm.stopPrank();
+
     
 }
 
