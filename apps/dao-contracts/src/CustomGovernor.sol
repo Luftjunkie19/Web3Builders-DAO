@@ -9,7 +9,8 @@ contract CustomBuilderGovernor {
 // Errors
 error InvalidProposalState(string message);
 error InvalidUserPropose(string message);
-error InvalidUserVote(string message);
+
+error ExecutionFailed(address target, bytes returnData);
 
 // Events
 event ProposalCreated(
@@ -18,13 +19,12 @@ event ProposalCreated(
     );
 
 event ProposalCanceled(
-        uint256 id,
+        bytes32 id,
         address proposer
     );
 
 event ProposalExecuted(
-        bytes32 id,
-        address proposer
+        bytes32 id
     );
 
 event ProposalQueued(
@@ -32,18 +32,10 @@ event ProposalQueued(
         address proposer
     );
 
-event ProposalStandardVoted(
+event ProposalVoted(
         bytes32 id,
         address voter,
-        uint256 weight,
-        StandardProposalVote standardVoteOption
-    );
-
-event ProposalCustomVoted(
-        bytes32 id,
-        address voter,
-        uint256 weight,
-        CustomProposalVote customVoteOption
+        uint256 weight
     );
 
 event ProposalVoteDelegated(
@@ -62,7 +54,7 @@ event ProposalVoteDelegated(
 
 
 // Enums
-    enum VotingOptionsType{
+    enum VotingOptionType{
         Standard,
         Custom
     }
@@ -97,79 +89,41 @@ enum UrgencyLevel{
         High
 }
 
-// Structs
-struct StandardProposal{
-    bytes32 id;
-    address proposer;
-    string description;
-    uint256 startBlock;
-    uint256 endBlock;
-    VotingOptionsType votingOptionsType;
-    uint256 votingPeriod;
-    uint256 votingDelay;
-    UrgencyLevel urgencyLevel;
-    uint256 proposalVoteCount;
-    uint256 proposalVoteWeight;
-    StandardProposalVote standardVoteOption;
-    ProposalState state;
+//Structs
+struct Proposal{
+    bytes32 id; // proposalId
+    address proposer; // proposer address
+    string description; // proposal description
+    uint256 startBlock; // When to start the voting period
+    uint256 endBlock; // When to end the voting period
+    uint256 votingDelay; // How long the voting delay lasts
+    UrgencyLevel urgencyLevel; // urgency level of the proposal
+    ProposalState state; // proposal state
     address[] targets; // reward addresses or system logic
-    uint256[] values;
-    bytes[] calldatas;
-    bool executed;
-    bool canceled;
-    uint256 queuedAt;
-    uint256 executedAt;
-    uint256 canceledAt;
+    uint256[] values; // reward values or system logic
+    bytes[] calldatas; // reward data or system logic
+    bool isCustom; // is custom proposal
+    bool executed; // proposal executed
+    bool canceled; // proposal canceled
+    bool defeated; // proposal defeated
+    uint256 queuedAt; // proposal queued at
+    uint256 executedAt; // proposal executed at
+    uint256 canceledAt; // proposal canceled at
     }
 
-    struct CustomProposal{
-        bytes32 id;
-        address proposer;
-        string description;
-        uint256 startBlock;
-        uint256 endBlock;
-        VotingOptionsType votingOptionsType;
-        uint256 votingPeriod;
-        uint256 votingDelay;
-        UrgencyLevel urgencyLevel;
-        uint256 proposalVoteCount;
-        uint256 proposalVoteWeight;
-        CustomProposalVote customVoteOption;
-        ProposalState state;
-        address[] targets; // reward addresses or system logic
-        uint256[] values;
-        bytes[] calldatas;
-        bool executed;
-        bool canceled;
-        uint256 queuedAt;
-        uint256 executedAt;
-        uint256 canceledAt; 
-    }
-    
-    struct Vote{
-        address voter;
-        bytes32 proposalId;
-        uint256 weight;
-        StandardProposalVote standardVoteOption;
-        bool isCustom;
-        CustomProposalVote customVoteOption;
-        bool isVoted;
-        bool isDelegated;
-        string reason;
-        uint256 timestamp;
-        bytes32 extraData;
-    }
-
-// mappings
-mapping(UrgencyLevel => uint256) public urgencyLevelToQuorum;
-mapping(bytes32 => StandardProposal) public standardProposals; // proposalId to proposal
-mapping(bytes32 => CustomProposal) public customProposals; // proposalId to proposal
-mapping(bytes32=> Vote) public proposalIdToVote; // proposalId to vote
-mapping(bytes32 => mapping(address => Vote)) public proposalIdToVotes;
-mapping(address => mapping(bytes32 => Vote)) public userVotes; // user address to proposalId to vote
-mapping(address => mapping(bytes32 => Vote)) public userDelegatedVotes; // user address to proposalId to vote
-mapping(address=> StandardProposal[]) public userStandardProposals; // user address to proposalId to vote
-mapping(address=> CustomProposal[]) public userCustomProposals; // user address to proposalId to vote
+struct Vote {
+    bytes32 votedProposalId; // proposalId
+    address voter;
+    address delegatee; // delegatee address
+    uint256 weight;
+  uint8 voteOption;
+    bool isCustom; // is custom vote
+    bool isVoted;
+    bool isDelegated;
+    string reason;
+    uint256 timestamp;
+    bytes32 extraData;
+}
 
 // Variables
 uint256 public constant MIN_VOTING_PERIOD = 100; // 100 blocks
@@ -187,12 +141,37 @@ IVotes public immutable IVotestoken;
 ERC20Votes public immutable govToken;
 
 
+// mappings
+mapping(UrgencyLevel => uint256) public urgencyLevelToQuorum;
+mapping(bytes32 => Proposal) public proposals; // proposalId to proposal
+mapping(bytes32 => mapping(address => Vote)) public proposalVotes; // proposalId to user address to vote
+mapping(bytes32 => address[]) public proposalVoters;
+mapping(address => Vote[]) public userVotes; // user address to proposalId to vote
+mapping(address=> Proposal[]) public userProposals; // user address to proposalId to vote
+
+
+
 modifier eligibleToPropose() {
-        if(govToken.getVotes(msg.sender) >= getProposalThreshold()){
+        if(govToken.getVotes(msg.sender) < getProposalThreshold()){
             revert InvalidUserPropose("You are not eligible to propose a new proposal.");
         }
         _;
+}
+
+modifier isVotingActive(bytes32 proposalId){
+
+if(proposals[proposalId].state == ProposalState.Pending){
+    revert InvalidProposalState("Proposal is pending.... PLEASE WAIT !");
+}
+
+    if(block.number < proposals[proposalId].endBlock || proposals[proposalId].state != ProposalState.Active){
+        revert InvalidProposalState("Voting period over.");
+        
     }
+    _;
+}
+
+
 
 constructor(IVotes _token){
         IVotestoken = _token;
@@ -203,7 +182,15 @@ constructor(IVotes _token){
         urgencyLevelToQuorum[UrgencyLevel.High] = HIGH_LEVEL_URGENCY_QUORUM;
     }
 
-    
+
+// function getStandardProposalVotes(bytes32 proposalId) public view returns (uint256 votesFor, uint256 votesAgainst, uint256 votesAbstain) {
+        
+//     }
+
+// function getCustomProposalVotes(bytes32 proposalId) public view returns (uint256 votesCustom1, uint256 votesCustom2, uint256 votesCustom3, uint256 votesCustom4, uint256 votesCustom5) {
+        
+// }
+
     function getIVotesToken() public view returns (IVotes) {
         return IVotestoken;
     }
@@ -212,13 +199,6 @@ constructor(IVotes _token){
         return govToken;
     }
 
-    function getStandardProposal(bytes32 proposalId) public view returns (StandardProposal memory) {
-        return standardProposals[proposalId];
-    }
-
-    function getCustomProposal(bytes32 proposalId) public view returns (CustomProposal memory) {
-        return customProposals[proposalId];
-    }
 
     function getProposalCount() public view returns (uint256) {
         return proposalCount;
@@ -232,234 +212,212 @@ constructor(IVotes _token){
         return govToken.totalSupply() / 200;
     }
 
-    function createStandardProposal(
+function getStandardProposalVotes(bytes32 proposalId)
+    public
+    view
+    returns (uint256 votesFor, uint256 votesAgainst, uint256 votesAbstain)
+{
+    address[] memory voters = proposalVoters[proposalId];
+    for (uint256 i = 0; i < voters.length; i++) {
+        Vote memory vote = proposalVotes[proposalId][voters[i]];
+        if (vote.isCustom) break; 
+
+        if (vote.voteOption == 0) {
+            votesFor += vote.weight;
+        } else if (vote.voteOption == 1) {
+            votesAgainst += vote.weight;
+        } else if (vote.voteOption == 2) {
+            votesAbstain += vote.weight;
+        }
+    }
+}
+
+function getCustomProposalVotes(bytes32 proposalId)
+    public
+    view
+    returns (uint256[5] memory customVoteCounts)
+{
+    address[] memory voters = proposalVoters[proposalId];
+    for (uint256 i = 0; i < voters.length; i++) {
+        Vote memory vote = proposalVotes[proposalId][voters[i]];
+        if (!vote.isCustom) continue; // skip standard votes
+
+        uint8 option = vote.voteOption; // 0 to 4 (MAX 5 options)
+        if (option < 5) {
+            customVoteCounts[option] += vote.weight;
+        }
+    }
+}
+
+
+
+    function createProposal(
         string calldata description,
         address[] calldata targets,
         uint256[] calldata values,
         bytes[] calldata calldatas,
         UrgencyLevel urgencyLevel,
-        StandardProposalVote standardVoteOption
+        bool isCustom
     ) public eligibleToPropose {
         proposalCount++;
 
-        bytes32 proposalId = keccak256(abi.encodePacked(proposalCount,description, targets, values, msg.sender, block.timestamp));
+        bytes32 proposalId = keccak256(abi.encodePacked(proposalCount,description, targets, values, isCustom, msg.sender, block.timestamp));
 
-        StandardProposal memory proposal = StandardProposal(
-            proposalId,
-            msg.sender,
-            description,
-            block.number + 1, // start block
-            block.number + 100, // end block
-            VotingOptionsType.Standard,
-            100, // voting period
-            1, // voting delay
-            urgencyLevel,
-            0, // proposal vote count
-            0, // proposal vote weight
-            standardVoteOption,
-            ProposalState.Pending,
-            targets,
-            values,
-            calldatas,
-            false, // executed
-            false, // canceled
-            0, // queuedAt
-            0, // executedAt
-            0 // canceledAt
-        ); 
+        Proposal memory proposal = Proposal({
+            id:proposalId,
+            proposer:msg.sender,
+            description:description,
+            startBlock:block.number,
+            endBlock:block.number + MAX_VOTING_PERIOD,
+            votingDelay:MIN_VOTING_DELAY,
+            urgencyLevel:urgencyLevel,
+            state:ProposalState.Pending,
+            targets:targets,
+            values:values,
+            calldatas:calldatas,
+            isCustom:isCustom,
+            executed:false,
+            canceled:false,
+            defeated:false,
+            queuedAt:0,
+            executedAt:0,
+            canceledAt:0
+        });
 
-        standardProposals[proposalId] = proposal;
-        userStandardProposals[msg.sender].push(proposal);
-        
-        emit ProposalCreated(proposalId, msg.sender);
+        proposals[proposalId] = proposal;
+      userProposals[msg.sender].push(proposal);
+     
+     emit ProposalCreated(proposalId, msg.sender);
     }
 
-    function createCustomProposal(
-        string calldata description,
-        address[] calldata targets,
-        uint256[] calldata values,
-        bytes[] calldata calldatas,
-        UrgencyLevel urgencyLevel,
-        CustomProposalVote customVoteOption
-    ) public eligibleToPropose {
-        proposalCount++;
+function activateProposal(bytes32 proposalId) external {
+ if(block.timestamp < proposals[proposalId].startBlock){
+     revert InvalidProposalState("Proposal is not yet ready to be activated.");
+ }
 
-        bytes32 proposalId = keccak256(abi.encodePacked(proposalCount,description, targets, values, msg.sender, block.timestamp));
+ proposals[proposalId].state = ProposalState.Active;
+}
 
-        CustomProposal memory proposal = CustomProposal(
-            proposalId,
-            msg.sender,
-            description,
-            block.number + 1, // start block
-            block.number + 100, // end block
-            VotingOptionsType.Custom,
-            100, // voting period
-            1, // voting delay
-            urgencyLevel,
-            0, // proposal vote count
-            0, // proposal vote weight
-            customVoteOption,
-            ProposalState.Pending,
-            targets,
-            values,
-            calldatas,
-            false, // executed
-            false, // canceled
-            0, // queuedAt
-            0, // executedAt
-            0 // canceledAt
-        ); 
 
-        customProposals[proposalId] = proposal;
-        userCustomProposals[msg.sender].push(proposal);
-        
-        emit ProposalCreated(proposalId, msg.sender);
+    function getProposalQuorumNeeded(bytes32 proposalId) public view returns (uint256) {
+        return (govToken.totalSupply() * getUrgencyQuorum(proposals[proposalId].urgencyLevel)) / 100;
     }
 
-    function castStandardVote(
+    function castVote(
         bytes32 proposalId,
-        StandardProposalVote standardVoteOption,
         string calldata reason,
-        bytes32 extraData
-    ) public {
+        address delegatee,
+        uint8 voteOption,
+        bytes32 extraData,
+        bool isCustom
+    ) public
+    isVotingActive(proposalId)
+     {
         govToken.delegate(msg.sender);
-        uint256 weight = govToken.getVotes(msg.sender);
 
-proposalIdToVote[proposalId].weight = weight;
-        proposalIdToVote[proposalId].standardVoteOption = standardVoteOption;
-        proposalIdToVote[proposalId].reason = reason;
-        proposalIdToVote[proposalId].extraData = extraData;
-        proposalIdToVote[proposalId].isVoted = true;
-        proposalIdToVote[proposalId].timestamp = block.timestamp;
+        uint256 weight = govToken.getPastVotes(msg.sender, block.number - 1);
 
-        proposalIdToVotes[proposalId][msg.sender] = proposalIdToVote[proposalId];
+  Vote memory vote=Vote({
+     votedProposalId:proposalId,
+            voter:msg.sender,
+            delegatee:delegatee,
+            weight:weight,
+            voteOption:voteOption,
+            isCustom:isCustom,
+            isVoted:true,
+            isDelegated:delegatee != address(0),
+            reason:reason,
+            timestamp:block.timestamp,
+            extraData:extraData
+        });
 
-        proposalIdToVotes[proposalId][msg.sender].voter = msg.sender;
-        proposalIdToVotes[proposalId][msg.sender].proposalId = proposalId;
-        proposalIdToVotes[proposalId][msg.sender].weight = weight;
-        
-        userVotes[msg.sender][proposalId] = proposalIdToVote[proposalId];
-        userVotes[msg.sender][proposalId].voter = msg.sender;
-        userVotes[msg.sender][proposalId].proposalId = proposalId;
-        userVotes[msg.sender][proposalId].weight = weight;
-        userVotes[msg.sender][proposalId].isDelegated = false;
-        userVotes[msg.sender][proposalId].isVoted = true;
-        userVotes[msg.sender][proposalId].timestamp = block.timestamp;
-        userVotes[msg.sender][proposalId].reason = reason;
-        userVotes[msg.sender][proposalId].extraData = extraData;
-        userVotes[msg.sender][proposalId].standardVoteOption = standardVoteOption;
-        userVotes[msg.sender][proposalId].isCustom = false;
+        proposalVotes[proposalId][msg.sender] = vote;
+        proposalVoters[proposalId].push(msg.sender);
+        userVotes[msg.sender].push(vote);
 
-        
-        emit ProposalStandardVoted(proposalId, msg.sender, weight, standardVoteOption);
+        emit ProposalVoted(proposalId, msg.sender, voteOption);
+
+    }
+    function queueProposal(bytes32 proposalId) public  {
+
+        if(proposals[proposalId].state != ProposalState.Active || block.timestamp < proposals[proposalId].endBlock){
+            revert InvalidProposalState("Proposal is not yet ready to be queued.");
+        }
+        uint256 quorumNeeded = getProposalQuorumNeeded(proposalId);
+
+if(!proposals[proposalId].isCustom){
+
+    (uint256 votesFor, uint256 votesAgainst, uint256 votesAbstain) = getStandardProposalVotes(proposalId);
+
+    uint256 totalVotes = votesFor + votesAgainst + votesAbstain;
+    if(totalVotes < quorumNeeded){
+         proposals[proposalId].state = ProposalState.Defeated;
+        proposals[proposalId].defeated = true;
+        emit ProposalDefeated(proposalId, msg.sender);
+        revert InvalidProposalState("Quorum not reached.");
+    }
     
+}
+
+if(proposals[proposalId].isCustom){
+
+    uint256[5] memory customVoteCounts = getCustomProposalVotes(proposalId);
+
+    uint256 totalVotes = customVoteCounts[0] + customVoteCounts[1] + customVoteCounts[2] + customVoteCounts[3] + customVoteCounts[4];
+    if(totalVotes < quorumNeeded){
+        proposals[proposalId].state = ProposalState.Defeated;
+        proposals[proposalId].defeated = true;
+        emit ProposalDefeated(proposalId, msg.sender);
+        revert InvalidProposalState("Quorum not reached.");
+    }
+}
+
+        proposals[proposalId].state = ProposalState.Queued;
+        proposals[proposalId].queuedAt = block.timestamp;
+
+        emit ProposalQueued(proposalId, msg.sender);
     }
 
-    function castCustomVote(
-        bytes32 proposalId,
-        CustomProposalVote customVoteOption,
-        string calldata reason,
-        bytes32 extraData
-    ) public {
-        govToken.delegate(msg.sender);
-        uint256 weight = govToken.getVotes(msg.sender);
-        proposalIdToVote[proposalId].weight = weight;
-        proposalIdToVote[proposalId].customVoteOption = customVoteOption;
-        proposalIdToVote[proposalId].reason = reason;
-        proposalIdToVote[proposalId].extraData = extraData;
-        proposalIdToVote[proposalId].isVoted = true;
-        proposalIdToVote[proposalId].timestamp = block.timestamp;
-        proposalIdToVotes[proposalId][msg.sender].isCustom = true;
-        proposalIdToVotes[proposalId][msg.sender] = proposalIdToVote[proposalId];
-        proposalIdToVotes[proposalId][msg.sender].voter = msg.sender;
-        proposalIdToVotes[proposalId][msg.sender].proposalId = proposalId;
-        proposalIdToVotes[proposalId][msg.sender].weight = weight;
-
-     userVotes[msg.sender][proposalId] = proposalIdToVote[proposalId];
-        userVotes[msg.sender][proposalId].voter = msg.sender;   
-        userVotes[msg.sender][proposalId].proposalId = proposalId;
-        userVotes[msg.sender][proposalId].weight = weight;
-        userVotes[msg.sender][proposalId].isDelegated = false;
-        userVotes[msg.sender][proposalId].isVoted = true;
-        userVotes[msg.sender][proposalId].timestamp = block.timestamp;
-        userVotes[msg.sender][proposalId].reason = reason;
-        userVotes[msg.sender][proposalId].extraData = extraData;
-        userVotes[msg.sender][proposalId].customVoteOption = customVoteOption;
-        userVotes[msg.sender][proposalId].isCustom = true;
-
-        
-        
-        
-        emit ProposalCustomVoted(proposalId, msg.sender, weight, customVoteOption);
+function cancelProposal(bytes32 proposalId) public {
    
-    }
-    function queueStandardProposal(bytes32 proposalId) public  {
-        StandardProposal storage proposal = standardProposals[proposalId];
+   if(proposals[proposalId].state != ProposalState.Active || block.timestamp < proposals[proposalId].endBlock){
+            revert InvalidProposalState("Proposal is not yet ready to be canceled.");
+}
 
-if(urgencyLevelToQuorum[proposal.urgencyLevel] > proposal.proposalVoteWeight){
-    proposal.state = ProposalState.Defeated;
-    proposal.canceled = true;
-    proposal.canceledAt = block.timestamp;
-    emit ProposalDefeated(proposalId, msg.sender);
-    return;
-    }
+        proposals[proposalId].state = ProposalState.Canceled;
+        proposals[proposalId].canceledAt = block.timestamp;
+        proposals[proposalId].canceled = true;
 
-        if (proposal.state != ProposalState.Succeeded) {
-            revert InvalidProposalState("Proposal is not in a state to be queued.");
-        }
-        proposal.state = ProposalState.Queued;
-        proposal.queuedAt = block.timestamp;
-        emit ProposalQueued(proposalId, msg.sender);
-
-    
-    }
-
-    function queueCustomProposal(bytes32 proposalId) public  {
-        CustomProposal storage proposal = customProposals[proposalId];
-
-if(urgencyLevelToQuorum[proposal.urgencyLevel] > proposal.proposalVoteWeight){
-    proposal.state = ProposalState.Defeated;
-    proposal.canceled = true;
-    proposal.canceledAt = block.timestamp;
-    emit ProposalDefeated(proposalId, msg.sender);
-    return;
+        emit ProposalCanceled(proposalId, msg.sender);
     }
 
 
-        if (proposal.state != ProposalState.Succeeded) {
-            revert InvalidProposalState("Proposal is not in a state to be queued.");
-        }
-        proposal.state = ProposalState.Queued;
-        proposal.queuedAt = block.timestamp;
-        emit ProposalQueued(proposalId, msg.sender);
+    function executeProposal(bytes32 proposalId) public {
+     
+     Proposal memory proposal = proposals[proposalId];
 
-    
-    }
+     if(proposal.targets.length > 0){
+         for(uint i = 0; i < proposal.targets.length; i++){
+             address target = proposal.targets[i];
+             uint256 value = proposal.values[i];
+             bytes memory data = proposal.calldatas[i];
 
-    function executeStandardProposal(bytes32 proposalId) public {
-        StandardProposal storage proposal = standardProposals[proposalId];
-        if (proposal.state != ProposalState.Queued) {
-            revert InvalidProposalState("Proposal is not in a state to be executed.");
-        }
-        proposal.state = ProposalState.Executed;
-        proposal.executedAt = block.timestamp;
-        proposal.executed = true;
+             if(target != address(0)){
+                 (bool success, bytes memory returnData) = target.call{value:value}(data);
+                 if(!success){
+                     revert ExecutionFailed(target, returnData);
+                 }
+             }
 
-        emit ProposalExecuted(proposalId, msg.sender);
-    
-    }
+         }
+     }
+     
+     
+        proposals[proposalId].state = ProposalState.Executed;
+        proposals[proposalId].executedAt = block.timestamp;
+        proposals[proposalId].executed = true;
 
-    function executeCustomProposal(bytes32 proposalId) public {
-        CustomProposal storage proposal = customProposals[proposalId];
-        if (proposal.state != ProposalState.Queued) {
-            revert InvalidProposalState("Proposal is not in a state to be executed.");
-        }
-        proposal.state = ProposalState.Executed;
-        proposal.executedAt = block.timestamp;
-        proposal.executed = true;
-
-        emit ProposalExecuted(proposalId, msg.sender);
-    
+        emit ProposalExecuted(proposalId);
     }
 
 }
