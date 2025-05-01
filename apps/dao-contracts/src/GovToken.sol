@@ -191,6 +191,12 @@ if(isAdmin) {
 }
 
 function punishMember(address user, uint256 amount) public {
+
+if(super.balanceOf(user) < amount) {
+        _burn(user, super.balanceOf(user));
+        return;
+  }
+
   if (userMaliciousActions[user] >= malicious_actions_limit) {
     _burn(user, super.balanceOf(user));
   } else {
