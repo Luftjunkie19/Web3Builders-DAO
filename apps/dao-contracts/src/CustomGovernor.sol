@@ -7,8 +7,14 @@ import {ERC20Votes} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Vo
 contract CustomBuilderGovernor {
 
 // Errors
-error InvalidProposalState(string message);
-error InvalidUserPropose(string message);
+error InvalidProposalState();
+error VotingNotStarted();
+error VotingPeriodOver();
+error NotElligibleToPropose();
+error InvalidUserPropose();
+error NotReadyToExecute();
+error NotReadyToCancel();
+error NotReadyToStart();
 
 error ExecutionFailed(address target, bytes returnData);
 
@@ -94,8 +100,8 @@ struct Proposal{
     bytes32 id; // proposalId
     address proposer; // proposer address
     string description; // proposal description
-    uint256 startBlock; // When to start the voting period
-    uint256 endBlock; // When to end the voting period
+    uint256 startBlockTimestamp; // When to start the voting period
+    uint256 endBlockTimestamp; // When to end the voting period
     uint256 votingDelay; // How long the voting delay lasts
     UrgencyLevel urgencyLevel; // urgency level of the proposal
     ProposalState state; // proposal state
@@ -151,21 +157,20 @@ mapping(address=> Proposal[]) public userProposals; // user address to proposalI
 
 
 
-modifier eligibleToPropose() {
-        if(govToken.getVotes(msg.sender) < getProposalThreshold()){
-            revert InvalidUserPropose("You are not eligible to propose a new proposal.");
-        }
-        _;
-}
+
 
 modifier isVotingActive(bytes32 proposalId){
 
 if(proposals[proposalId].state == ProposalState.Pending){
-    revert InvalidProposalState("Proposal is pending.... PLEASE WAIT !");
+    revert VotingNotStarted();
 }
 
-    if(block.number < proposals[proposalId].endBlock || proposals[proposalId].state != ProposalState.Active){
-        revert InvalidProposalState("Voting period over.");
+if(proposals[proposalId].startBlockTimestamp + proposals[proposalId].votingDelay > block.timestamp){
+    revert VotingNotStarted();
+}
+
+    if(block.timestamp > proposals[proposalId].endBlockTimestamp || proposals[proposalId].state != ProposalState.Active){
+        revert VotingPeriodOver();
         
     }
     _;
@@ -253,13 +258,19 @@ function getCustomProposalVotes(bytes32 proposalId)
 
     function createProposal(
         string calldata description,
-        address[] calldata targets,
-        uint256[] calldata values,
-        bytes[] calldata calldatas,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
         UrgencyLevel urgencyLevel,
-        bool isCustom
-    ) public eligibleToPropose {
-        proposalCount++;
+        bool isCustom,
+        uint256 votingDelay,
+        uint256 endBlockTimestamp
+    ) public returns (bytes32) {
+       
+       if(govToken.getPastVotes(msg.sender, block.number - 1) < getProposalThreshold()){
+            revert NotElligibleToPropose();
+        }
+
 
         bytes32 proposalId = keccak256(abi.encodePacked(proposalCount,description, targets, values, isCustom, msg.sender, block.timestamp));
 
@@ -267,9 +278,9 @@ function getCustomProposalVotes(bytes32 proposalId)
             id:proposalId,
             proposer:msg.sender,
             description:description,
-            startBlock:block.number,
-            endBlock:block.number + MAX_VOTING_PERIOD,
-            votingDelay:MIN_VOTING_DELAY,
+            startBlockTimestamp:block.timestamp,
+            endBlockTimestamp:endBlockTimestamp,
+            votingDelay:votingDelay,
             urgencyLevel:urgencyLevel,
             state:ProposalState.Pending,
             targets:targets,
@@ -287,12 +298,20 @@ function getCustomProposalVotes(bytes32 proposalId)
         proposals[proposalId] = proposal;
       userProposals[msg.sender].push(proposal);
      
+      proposalCount++;
      emit ProposalCreated(proposalId, msg.sender);
+
+     return proposalId;
     }
 
+
+function getProposal(bytes32 proposalId) public view returns (Proposal memory) {
+    return proposals[proposalId];
+}
+
 function activateProposal(bytes32 proposalId) external {
- if(block.timestamp < proposals[proposalId].startBlock){
-     revert InvalidProposalState("Proposal is not yet ready to be activated.");
+ if(block.timestamp < proposals[proposalId].startBlockTimestamp + proposals[proposalId].votingDelay){
+     revert NotReadyToStart();
  }
 
  proposals[proposalId].state = ProposalState.Active;
@@ -340,8 +359,8 @@ function activateProposal(bytes32 proposalId) external {
     }
     function queueProposal(bytes32 proposalId) public  {
 
-        if(proposals[proposalId].state != ProposalState.Active || block.timestamp < proposals[proposalId].endBlock){
-            revert InvalidProposalState("Proposal is not yet ready to be queued.");
+        if(proposals[proposalId].state != ProposalState.Active || block.timestamp < proposals[proposalId].endBlockTimestamp){
+            revert InvalidProposalState();
         }
         uint256 quorumNeeded = getProposalQuorumNeeded(proposalId);
 
@@ -354,7 +373,7 @@ if(!proposals[proposalId].isCustom){
          proposals[proposalId].state = ProposalState.Defeated;
         proposals[proposalId].defeated = true;
         emit ProposalDefeated(proposalId, msg.sender);
-        revert InvalidProposalState("Quorum not reached.");
+        revert InvalidProposalState();
     }
     
 }
@@ -368,7 +387,7 @@ if(proposals[proposalId].isCustom){
         proposals[proposalId].state = ProposalState.Defeated;
         proposals[proposalId].defeated = true;
         emit ProposalDefeated(proposalId, msg.sender);
-        revert InvalidProposalState("Quorum not reached.");
+        revert InvalidProposalState();
     }
 }
 
@@ -380,8 +399,8 @@ if(proposals[proposalId].isCustom){
 
 function cancelProposal(bytes32 proposalId) public {
    
-   if(proposals[proposalId].state != ProposalState.Active || block.timestamp < proposals[proposalId].endBlock){
-            revert InvalidProposalState("Proposal is not yet ready to be canceled.");
+   if(proposals[proposalId].state != ProposalState.Active || block.timestamp < proposals[proposalId].endBlockTimestamp){
+            revert InvalidProposalState();
 }
 
         proposals[proposalId].state = ProposalState.Canceled;

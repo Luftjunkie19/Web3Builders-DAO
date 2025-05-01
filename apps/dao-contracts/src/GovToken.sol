@@ -12,6 +12,7 @@ import {Ownable} from "../lib/openzeppelin-contracts/contracts/access/Ownable.so
 contract GovernmentToken is ERC20, Ownable, ERC20Permit, ERC20Votes, VotesExtended {
 
 error IntialTokensAlreadyReceived();
+error IntialTokensNotReceived();
 error MaliciousActionsLimitReached();
 error SupplySurpassed();
 
@@ -108,6 +109,13 @@ mapping(KnowledgeVerificationTestRate => uint256) public kvtrOptions;
         _;
     }
 
+    modifier rewardOnlyInitialTokensReceivers(){
+if(!receivedInitialTokens[msg.sender]) {
+    revert IntialTokensNotReceived(); 
+}
+_;
+    }
+
 function totalSupply () public view virtual override(ERC20) returns (uint256) {
   return super.totalSupply();
 }
@@ -191,7 +199,7 @@ function punishMember(address user, uint256 amount) public {
   }
 }
 
-function rewardUser(address user, uint256 amount) public {
+function rewardUser(address user, uint256 amount) public rewardOnlyInitialTokensReceivers {
   _mint(user, amount);
 emit UserRewarded(user, amount);
 }
