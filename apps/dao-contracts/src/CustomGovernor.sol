@@ -126,9 +126,19 @@ struct Vote {
     bool isCustom; // is custom vote
     bool isVoted;
     bool isDelegated;
+    bool isDefeatingVote;
+    bool isApprovingVote;
     string reason;
     uint256 timestamp;
     bytes32 extraData;
+    uint256[] customCalldataIndices;
+}
+
+struct ExecutionVoteSummary{
+    uint8 voteOptionId;
+    uint256 castedVotes;
+    address lastVoter;
+    bool isExecutable;
 }
 
 // Variables
@@ -176,8 +186,6 @@ if(proposals[proposalId].startBlockTimestamp + proposals[proposalId].votingDelay
     _;
 }
 
-
-
 constructor(IVotes _token){
         IVotestoken = _token;
         govToken = ERC20Votes(address(_token));
@@ -187,14 +195,6 @@ constructor(IVotes _token){
         urgencyLevelToQuorum[UrgencyLevel.High] = HIGH_LEVEL_URGENCY_QUORUM;
     }
 
-
-// function getStandardProposalVotes(bytes32 proposalId) public view returns (uint256 votesFor, uint256 votesAgainst, uint256 votesAbstain) {
-        
-//     }
-
-// function getCustomProposalVotes(bytes32 proposalId) public view returns (uint256 votesCustom1, uint256 votesCustom2, uint256 votesCustom3, uint256 votesCustom4, uint256 votesCustom5) {
-        
-// }
 
     function getIVotesToken() public view returns (IVotes) {
         return IVotestoken;
@@ -240,7 +240,7 @@ function getStandardProposalVotes(bytes32 proposalId)
 function getCustomProposalVotes(bytes32 proposalId)
     public
     view
-    returns (uint256[5] memory customVoteCounts)
+    returns (ExecutionVoteSummary[5] memory customVoteCounts)
 {
     address[] memory voters = proposalVoters[proposalId];
     for (uint256 i = 0; i < voters.length; i++) {
@@ -249,7 +249,9 @@ function getCustomProposalVotes(bytes32 proposalId)
 
         uint8 option = vote.voteOption; // 0 to 4 (MAX 5 options)
         if (option < 5) {
-            customVoteCounts[option] += vote.weight;
+            customVoteCounts[option].voteOptionId = option;
+            customVoteCounts[option].castedVotes == customVoteCounts[option].castedVotes + vote.weight;
+            customVoteCounts[option].isExecutable=vote.isApprovingVote;
         }
     }
 }
@@ -328,7 +330,10 @@ function activateProposal(bytes32 proposalId) external {
         address delegatee,
         uint8 voteOption,
         bytes32 extraData,
-        bool isCustom
+        bool isCustom,
+        bool isApprovingVote,
+        bool isDefeatingVote,
+        uint256[] calldata customCalldataIndices
     ) public
     isVotingActive(proposalId)
      {
@@ -344,10 +349,13 @@ function activateProposal(bytes32 proposalId) external {
             voteOption:voteOption,
             isCustom:isCustom,
             isVoted:true,
+            isApprovingVote:isApprovingVote,
+            isDefeatingVote:isDefeatingVote,
             isDelegated:delegatee != address(0),
             reason:reason,
             timestamp:block.timestamp,
-            extraData:extraData
+            extraData:extraData,
+            customCalldataIndices:customCalldataIndices
         });
 
         proposalVotes[proposalId][msg.sender] = vote;
@@ -368,27 +376,31 @@ if(!proposals[proposalId].isCustom){
 
     (uint256 votesFor, uint256 votesAgainst, uint256 votesAbstain) = getStandardProposalVotes(proposalId);
 
-    uint256 totalVotes = votesFor + votesAgainst + votesAbstain;
-    if(totalVotes < quorumNeeded){
+    uint256 totalNotCustomVotes = votesFor + votesAgainst + votesAbstain;
+    if(totalNotCustomVotes < quorumNeeded){
          proposals[proposalId].state = ProposalState.Defeated;
         proposals[proposalId].defeated = true;
         emit ProposalDefeated(proposalId, msg.sender);
         revert InvalidProposalState();
     }
+
+         proposals[proposalId].state = ProposalState.Queued;
+        proposals[proposalId].queuedAt = block.timestamp;
+
+        emit ProposalQueued(proposalId, msg.sender);
     
+    return;
 }
 
-if(proposals[proposalId].isCustom){
+    ExecutionVoteSummary[5] memory customVoteCounts = getCustomProposalVotes(proposalId);
 
-    uint256[5] memory customVoteCounts = getCustomProposalVotes(proposalId);
-
-    uint256 totalVotes = customVoteCounts[0] + customVoteCounts[1] + customVoteCounts[2] + customVoteCounts[3] + customVoteCounts[4];
+    uint256 totalVotes = customVoteCounts[0].castedVotes + customVoteCounts[1].castedVotes + customVoteCounts[2].castedVotes + customVoteCounts[3].castedVotes + customVoteCounts[4].castedVotes;
     if(totalVotes < quorumNeeded){
         proposals[proposalId].state = ProposalState.Defeated;
         proposals[proposalId].defeated = true;
         emit ProposalDefeated(proposalId, msg.sender);
         revert InvalidProposalState();
-    }
+    
 }
 
         proposals[proposalId].state = ProposalState.Queued;
@@ -411,12 +423,8 @@ function cancelProposal(bytes32 proposalId) public {
     }
 
 
-    function executeProposal(bytes32 proposalId) public {
-     
-     Proposal memory proposal = proposals[proposalId];
-
-     if(proposal.targets.length > 0){
-         for(uint i = 0; i < proposal.targets.length; i++){
+function callProposal(Proposal memory proposal) internal {
+     for(uint i = 0; i < proposal.targets.length; i++){
              address target = proposal.targets[i];
              uint256 value = proposal.values[i];
              bytes memory data = proposal.calldatas[i];
@@ -429,16 +437,79 @@ function cancelProposal(bytes32 proposalId) public {
              }
 
          }
-     }
-     
-     
-        proposals[proposalId].state = ProposalState.Executed;
-        proposals[proposalId].executedAt = block.timestamp;
-        proposals[proposalId].executed = true;
+        proposals[proposal.id].state = ProposalState.Executed;
+        proposals[proposal.id].executedAt = block.timestamp;
+        proposals[proposal.id].executed = true;
 
-        emit ProposalExecuted(proposalId);
+        emit ProposalExecuted(proposal.id);
+}
+
+function callSelectedProposal(bytes32 proposalId, uint256[] storage customCalldataIndices ) internal {
+    
+     for(uint i = 0; i < proposals[proposalId].targets.length; i++){
+             address target =  proposals[proposalId].targets[customCalldataIndices[i]];
+             uint256 value = proposals[proposalId].values[customCalldataIndices[i]];
+             bytes memory data = proposals[proposalId].calldatas[customCalldataIndices[i]];
+
+             if(target != address(0)){
+                 (bool success, bytes memory returnData) = target.call{value:value}(data);
+                 if(!success){
+                     revert ExecutionFailed(target, returnData);
+                 }
+             }
+     }
+}
+
+    function insertionSort(ExecutionVoteSummary[5] memory arr, bytes32 proposalId) internal view  returns (uint256[] storage customCalldataIndices, bool isExecutable) {
+        for(uint i = 1; i < arr.length; i++){
+            uint256 key = arr[i].castedVotes;
+            uint j = i - 1;
+            while(j >= 0 && arr[j].castedVotes < key){
+                arr[j + 1] = arr[j];
+                j--;
+            }
+            arr[j + 1].castedVotes = key;
+        }
+        return (proposalVotes[proposalId][arr[0].lastVoter].customCalldataIndices, arr[0].isExecutable);
     }
 
-}
+
+    function executeProposal(bytes32 proposalId) public {
+     
+     Proposal memory proposal = proposals[proposalId];
+     
+
+     if(!proposal.isCustom && proposal.targets.length > 0){
+     
+     (uint256 votesFor, uint256 votesAgainst, uint256 votesAbstain) = getStandardProposalVotes(proposalId);
+     
+     if(votesFor > votesAgainst && votesFor > votesAbstain){   
+        callProposal(proposal);
+         }
+        return;
+     }
+     
+     if(proposal.isCustom){
+    ExecutionVoteSummary[5] memory customVoteCounts = getCustomProposalVotes(proposalId);
+    (uint256[] storage customCalldataIndices, bool isExecutable) = insertionSort(customVoteCounts, proposalId);
+
+if(isExecutable){
+        callSelectedProposal(proposalId, customCalldataIndices);
+    }
+     }
+
+
+    proposals[proposalId].state = ProposalState.Executed;
+    proposals[proposalId].executedAt = block.timestamp;
+    proposals[proposalId].executed = true;
+    emit ProposalExecuted(proposalId);
+   
+     
+     }
+
+
+
+    }
+
 
 

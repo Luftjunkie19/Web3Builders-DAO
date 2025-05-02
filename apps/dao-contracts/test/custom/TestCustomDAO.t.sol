@@ -138,7 +138,10 @@ CustomBuilderGovernor.Proposal memory wannaCastVoteFailProposal = customGovernor
 vm.expectRevert(CustomBuilderGovernor.VotingNotStarted.selector);
 
 vm.prank(user2);
-customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 1, "0xx", wannaCastVoteFailProposal.isCustom);
+
+uint256[] memory indicies;
+
+customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 1, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
 
 
 uint256 proposalsAmountAfterProposal = customGovernor.proposalCount();
@@ -166,8 +169,9 @@ CustomBuilderGovernor.Proposal memory proposalAfterSuccess = customGovernor.getP
 
 assert(proposalAfterSuccess.state == CustomBuilderGovernor.ProposalState.Active);
 
+
 vm.prank(user2);
-customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 1, "0xx", wannaCastVoteFailProposal.isCustom);
+customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 1, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
 
 
 (uint256 yesVotes, uint256 noVotes, uint256 abstainVotes) = customGovernor.getStandardProposalVotes(proposalId);
@@ -220,12 +224,12 @@ bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though",
 govToken.delegate(user2);
 vm.stopPrank();
 
+uint256[] memory indicies;
 CustomBuilderGovernor.Proposal memory wannaCastVoteFailProposal = customGovernor.getProposal(proposalId);
 
 vm.expectRevert(CustomBuilderGovernor.VotingNotStarted.selector);
-
 vm.prank(user2);
-customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 1, "0xx", wannaCastVoteFailProposal.isCustom);
+customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 1, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
 
 
 uint256 proposalsAmountAfterProposal = customGovernor.proposalCount();
@@ -253,15 +257,40 @@ CustomBuilderGovernor.Proposal memory proposalAfterSuccess = customGovernor.getP
 
 assert(proposalAfterSuccess.state == CustomBuilderGovernor.ProposalState.Active);
 
-vm.prank(user2);
-customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 4, "0xx", wannaCastVoteFailProposal.isCustom);
+vm.startPrank(user2);
+govToken.handInUserInitialTokens(
+GovernmentToken.TokenReceiveLevel.MEDIUM,
+GovernmentToken.TokenReceiveLevel.MEDIUM_LOW,
+GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
+GovernmentToken.TokenReceiveLevel.MEDIUM,
+GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+true
+);
+govToken.delegate(user2);
 
+console.log(govToken.getPastVotes(msg.sender, block.number - 1), "User Balance Before Casting Vote");
+customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 3, "0xx", true, true, false, indicies);
+vm.stopPrank();
 
- uint256[5] memory customVoteCounts = customGovernor.getCustomProposalVotes(proposalId);
+ CustomBuilderGovernor.ExecutionVoteSummary[5] memory customVoteCounts = customGovernor.getCustomProposalVotes(proposalId);
 
 console.log(customVoteCounts.length);
 
-vm.warp(proposalAfterSuccess.endBlockTimestamp + 1);
+vm.warp(block.timestamp + proposalAfterSuccess.endBlockTimestamp + 604800);
+
+CustomBuilderGovernor.Proposal memory proposalBeforeQueued = customGovernor.getProposal(proposalId);
+
+CustomBuilderGovernor.ExecutionVoteSummary[5] memory customVoteCount = customGovernor.getCustomProposalVotes(proposalId);
+
+console.log(customVoteCount[0].castedVotes, 'Custom Vote Count');
+console.log(customVoteCount[1].castedVotes, 'Custom Vote Count 2');
+console.log(customVoteCount[2].castedVotes, 'Custom Vote Count 3');
+console.log(customVoteCount[3].castedVotes, 'Custom Vote Count 4');
+console.log(customVoteCount[4].castedVotes, 'Custom Vote Count 5');
+
+
+console.log(uint8(proposalBeforeQueued.state),  'Proposal State Before Queued');
+
 
 customGovernor.queueProposal(proposalId);
 
