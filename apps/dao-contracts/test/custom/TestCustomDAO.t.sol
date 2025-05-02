@@ -268,9 +268,29 @@ true
 );
 govToken.delegate(user2);
 
+vm.warp(block.timestamp  + 2);
+
 console.log(govToken.getPastVotes(msg.sender, block.number - 1), "User Balance Before Casting Vote");
 customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 3, "0xx", true, true, false, indicies);
 vm.stopPrank();
+
+(bytes32 retrievedPropsalId, 
+address retrievedPropsalVoter,
+    address retrievedPropsalDelegatee, 
+    uint256 retrievedPropsalWeight,
+     uint8 retrievedVoteOption,
+    bool retrievedIsCustom, 
+    bool retrievedIsVoted,
+    bool retrievedIsDelegated,
+    bool retrievedIsDefeatingVote,
+    bool retrievedIsApprovingVote,
+    string memory retrievedReason,
+    uint256 retrievedTimestamp,
+    bytes32 retrievedExtraData
+    
+    )=customGovernor.proposalVotes(proposalId, user2);
+
+console.log(retrievedPropsalWeight, retrievedVoteOption,"User Balance After Casting Vote");
 
  CustomBuilderGovernor.ExecutionVoteSummary[5] memory customVoteCounts = customGovernor.getCustomProposalVotes(proposalId);
 

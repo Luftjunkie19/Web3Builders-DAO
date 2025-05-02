@@ -250,7 +250,7 @@ function getCustomProposalVotes(bytes32 proposalId)
         uint8 option = vote.voteOption; // 0 to 4 (MAX 5 options)
         if (option < 5) {
             customVoteCounts[option].voteOptionId = option;
-            customVoteCounts[option].castedVotes == customVoteCounts[option].castedVotes + vote.weight;
+            customVoteCounts[option].castedVotes == vote.weight;
             customVoteCounts[option].isExecutable=vote.isApprovingVote;
         }
     }
@@ -384,15 +384,9 @@ if(!proposals[proposalId].isCustom){
         revert InvalidProposalState();
     }
 
-         proposals[proposalId].state = ProposalState.Queued;
-        proposals[proposalId].queuedAt = block.timestamp;
+    }
 
-        emit ProposalQueued(proposalId, msg.sender);
-    
-    return;
-}
-
-    ExecutionVoteSummary[5] memory customVoteCounts = getCustomProposalVotes(proposalId);
+      ExecutionVoteSummary[5] memory customVoteCounts = getCustomProposalVotes(proposalId);
 
     uint256 totalVotes = customVoteCounts[0].castedVotes + customVoteCounts[1].castedVotes + customVoteCounts[2].castedVotes + customVoteCounts[3].castedVotes + customVoteCounts[4].castedVotes;
     if(totalVotes < quorumNeeded){
@@ -400,14 +394,15 @@ if(!proposals[proposalId].isCustom){
         proposals[proposalId].defeated = true;
         emit ProposalDefeated(proposalId, msg.sender);
         revert InvalidProposalState();
-    
+    }
+
+    proposals[proposalId].state = ProposalState.Queued;
+    proposals[proposalId].queuedAt = block.timestamp;
+
+    emit ProposalQueued(proposalId, msg.sender);
 }
 
-        proposals[proposalId].state = ProposalState.Queued;
-        proposals[proposalId].queuedAt = block.timestamp;
-
-        emit ProposalQueued(proposalId, msg.sender);
-    }
+  
 
 function cancelProposal(bytes32 proposalId) public {
    
