@@ -109,8 +109,8 @@ mapping(KnowledgeVerificationTestRate => uint256) public kvtrOptions;
         _;
     }
 
-    modifier rewardOnlyInitialTokensReceivers(){
-if(!receivedInitialTokens[msg.sender]) {
+    modifier rewardOnlyInitialTokensReceivers(address member) {
+if(!receivedInitialTokens[member]) {
     revert IntialTokensNotReceived(); 
 }
 _;
@@ -205,7 +205,7 @@ if(super.balanceOf(user) < amount) {
   }
 }
 
-function rewardUser(address user, uint256 amount) public rewardOnlyInitialTokensReceivers {
+function rewardUser(address user, uint256 amount) public rewardOnlyInitialTokensReceivers(user) {
   _mint(user, amount);
 emit UserRewarded(user, amount);
 }

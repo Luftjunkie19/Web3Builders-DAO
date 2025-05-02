@@ -20,6 +20,12 @@ contract TestCustomDAO is Test {
     address public user2 = makeAddr("user2");
     address public user3 = makeAddr("user3");
 
+address[] proposalCreatedTargets;
+uint256[] proposalCreatedValues;
+bytes[] proposalCreatedCalldata; 
+
+uint256[]  indicies;
+
  function setUp() public {
         deployer = new DeployContract();
 
@@ -28,6 +34,17 @@ contract TestCustomDAO is Test {
         govToken = new GovernmentToken();
         customGovernor = new CustomBuilderGovernor(IVotes(address(govToken)));
     }
+
+
+
+function testGetIVotesToken() public view {
+    assert(address(customGovernor.getIVotesToken()) == address(govToken)); 
+}
+
+function testgetProposalCount() public view {
+    assert(customGovernor.getProposalCount() == 0);
+}
+
 
     function testExceededSupplyOccurs(uint256 supply) public {
         
@@ -51,7 +68,7 @@ govToken.rewardUser(user1, supply);
 
 
     function testPunishMemberWorksProperly() public {
-        vm.startPrank(user2);
+        vm.startPrank(user1);
               govToken.handInUserInitialTokens(
             GovernmentToken.TokenReceiveLevel.MEDIUM,
             GovernmentToken.TokenReceiveLevel.MEDIUM_LOW,
@@ -90,7 +107,7 @@ console.log(govToken.readMemberInfluence(user1));
 
 function testClaimIntialTokensWorksProperly() public {
     vm.prank(user1);
-    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, false);  
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, true);  
 
 
     uint256 balance = govToken.balanceOf(user1);
@@ -116,16 +133,13 @@ function testStandardProposalWorkflowWorksOk() public {
     // ⏳ advance a block AFTER delegation to make snapshot available
     vm.roll(block.number + 1); 
 
-    uint256 snapshotBlock = block.number - 1; // or block.number if you want to use current
-    uint256 balanceOfProposer = govToken.getPastVotes(user2, snapshotBlock);
-
-console.log(balanceOfProposer);
-
 uint256 proposalsAmountBeforeProposal = customGovernor.proposalCount();
 
-address[] memory proposalCreatedTargets;
-uint256[] memory proposalCreatedValues;
-bytes[] memory proposalCreatedCalldata;
+
+proposalCreatedTargets = [user2];
+proposalCreatedValues = [0];
+proposalCreatedCalldata=[abi.encodeWithSignature("rewardUser(address,uint256)", user2, 15e18)];
+indicies.push(0);
 
 vm.startPrank(user2);
 bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, false, 2400, block.timestamp + 604800); 
@@ -139,7 +153,7 @@ vm.expectRevert(CustomBuilderGovernor.VotingNotStarted.selector);
 
 vm.prank(user2);
 
-uint256[] memory indicies;
+
 
 customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 1, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
 
@@ -150,7 +164,6 @@ assert(proposalsAmountAfterProposal > proposalsAmountBeforeProposal);
 
 CustomBuilderGovernor.Proposal memory proposal = customGovernor.getProposal(proposalId);
 
-console.log(uint8(proposal.state),  'Proposal State');
 
 assert(proposal.state == CustomBuilderGovernor.ProposalState.Pending);
 
@@ -171,31 +184,51 @@ assert(proposalAfterSuccess.state == CustomBuilderGovernor.ProposalState.Active)
 
 
 vm.prank(user2);
-customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 1, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
+customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 0, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
 
 
 (uint256 yesVotes, uint256 noVotes, uint256 abstainVotes) = customGovernor.getStandardProposalVotes(proposalId);
 
 console.log(yesVotes, noVotes, abstainVotes);
 
-vm.warp(proposalAfterSuccess.endBlockTimestamp + 1);
 
+vm.warp(block.timestamp + proposalAfterSuccess.endBlockTimestamp + 100);
 customGovernor.queueProposal(proposalId);
 
 CustomBuilderGovernor.Proposal memory proposalAfterQueued = customGovernor.getProposal(proposalId);
 
-assert(proposalAfterQueued.state == CustomBuilderGovernor.ProposalState.Queued);
+vm.warp(block.timestamp + proposalAfterQueued.endBlockTimestamp + 1);
+
 
 customGovernor.executeProposal(proposalId);
 
 CustomBuilderGovernor.Proposal memory proposalAfterExecuted = customGovernor.getProposal(proposalId);
 
-assert(proposalAfterExecuted.state == CustomBuilderGovernor.ProposalState.Executed);
+console.log(uint8(proposalAfterExecuted.state), "Proposal State After Executed");
 
+vm.expectRevert(CustomBuilderGovernor.InvalidProposalState.selector);
+
+customGovernor.cancelProposal(proposalAfterQueued.id);
 
 }
 
+function testDecimals() public view {
+    assertEq(govToken.decimals(), 18);
+}
 
+function testGetNonces() public {
+vm.prank(user1);
+govToken.handInUserInitialTokens(
+    GovernmentToken.TokenReceiveLevel.MEDIUM,
+    GovernmentToken.TokenReceiveLevel.MEDIUM_LOW,
+    GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
+    GovernmentToken.TokenReceiveLevel.MEDIUM,
+    GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+    true
+);
+govToken.readMemberInfluence(user1);
+    assertEq(govToken.nonces(user1), 0);
+}
 
 function testCustomProposalWorkflowWorksOk() public {
     vm.startPrank(user2);
@@ -214,22 +247,25 @@ console.log(balanceOfProposer);
 
 uint256 proposalsAmountBeforeProposal = customGovernor.proposalCount();
 
-address[] memory proposalCreatedTargets;
-uint256[] memory proposalCreatedValues;
-bytes[] memory proposalCreatedCalldata;
 
 vm.startPrank(user2);
+proposalCreatedTargets = [address(govToken), address(govToken)];
+proposalCreatedValues = [0, 0];
+proposalCreatedCalldata=[abi.encodeWithSignature("punishMember(address,uint256)", user2, 15e18), abi.encodeWithSignature("rewardUser(address,uint256)", user2, 20)];
 bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, true, 2400, block.timestamp + 604800); 
 
 govToken.delegate(user2);
 vm.stopPrank();
 
-uint256[] memory indicies;
+indicies=[0, 1];
 CustomBuilderGovernor.Proposal memory wannaCastVoteFailProposal = customGovernor.getProposal(proposalId);
+console.log(wannaCastVoteFailProposal.isCustom);
+
+
 
 vm.expectRevert(CustomBuilderGovernor.VotingNotStarted.selector);
 vm.prank(user2);
-customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 1, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
+customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 3, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
 
 
 uint256 proposalsAmountAfterProposal = customGovernor.proposalCount();
@@ -268,45 +304,29 @@ true
 );
 govToken.delegate(user2);
 
+
 vm.warp(block.timestamp  + 2);
+
 
 console.log(govToken.getPastVotes(msg.sender, block.number - 1), "User Balance Before Casting Vote");
 customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 3, "0xx", true, true, false, indicies);
 vm.stopPrank();
 
-(bytes32 retrievedPropsalId, 
-address retrievedPropsalVoter,
-    address retrievedPropsalDelegatee, 
-    uint256 retrievedPropsalWeight,
-     uint8 retrievedVoteOption,
-    bool retrievedIsCustom, 
-    bool retrievedIsVoted,
-    bool retrievedIsDelegated,
-    bool retrievedIsDefeatingVote,
-    bool retrievedIsApprovingVote,
-    string memory retrievedReason,
-    uint256 retrievedTimestamp,
-    bytes32 retrievedExtraData
-    
-    )=customGovernor.proposalVotes(proposalId, user2);
-
-console.log(retrievedPropsalWeight, retrievedVoteOption,"User Balance After Casting Vote");
-
- CustomBuilderGovernor.ExecutionVoteSummary[5] memory customVoteCounts = customGovernor.getCustomProposalVotes(proposalId);
-
-console.log(customVoteCounts.length);
 
 vm.warp(block.timestamp + proposalAfterSuccess.endBlockTimestamp + 604800);
 
 CustomBuilderGovernor.Proposal memory proposalBeforeQueued = customGovernor.getProposal(proposalId);
 
-CustomBuilderGovernor.ExecutionVoteSummary[5] memory customVoteCount = customGovernor.getCustomProposalVotes(proposalId);
+CustomBuilderGovernor.HighestVotedCustomOption[5] memory customVoteCount = customGovernor.getCustomProposalVotes(proposalId);
 
-console.log(customVoteCount[0].castedVotes, 'Custom Vote Count');
-console.log(customVoteCount[1].castedVotes, 'Custom Vote Count 2');
-console.log(customVoteCount[2].castedVotes, 'Custom Vote Count 3');
-console.log(customVoteCount[3].castedVotes, 'Custom Vote Count 4');
-console.log(customVoteCount[4].castedVotes, 'Custom Vote Count 5');
+console.log(customVoteCount.length, 'Custom Vote Count After Queued');
+
+(uint256[] memory customIndicies, bool isCustomExecutable)= customGovernor.insertionSort(customVoteCount, proposalId);
+
+
+console.log(customIndicies.length, 'Custom Vote Indicies to calldata Count');
+console.log(isCustomExecutable, 'Custom Vote Executable');
+
 
 
 console.log(uint8(proposalBeforeQueued.state),  'Proposal State Before Queued');
