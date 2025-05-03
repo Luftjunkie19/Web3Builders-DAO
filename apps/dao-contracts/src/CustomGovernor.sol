@@ -17,7 +17,7 @@ error NotReadyToExecute();
 error NotReadyToCancel();
 error NotReadyToStart();
 
-error ExecutionFailed(address target, bytes returnData);
+error ExecutionFailed();
 
 // Events
 event ProposalCreated(
@@ -215,6 +215,20 @@ constructor(IVotes _token){
     function getUrgencyQuorum(UrgencyLevel urgencyLevel) public view returns (uint256) {
         return urgencyLevelToQuorum[urgencyLevel];
     }
+
+    function getProposalState(bytes32 proposalId) public view returns (ProposalState) {
+    Proposal memory p = proposals[proposalId];
+
+    if (p.executed) return ProposalState.Executed;
+    if (p.canceled) return ProposalState.Canceled;
+    if (block.timestamp < p.startBlockTimestamp + p.votingDelay) return ProposalState.Pending;
+    if (block.timestamp <= p.endBlockTimestamp) return ProposalState.Active;
+    if (p.defeated) return ProposalState.Defeated;
+
+    if (p.queuedAt != 0) return ProposalState.Queued;
+
+    return ProposalState.Succeeded;
+}
 
     function getProposalThreshold() public view returns (uint256) {
         return govToken.totalSupply() / 200;
@@ -455,7 +469,7 @@ function cancelProposal(bytes32 proposalId) public {
 
 
 function callProposal(Proposal memory proposal) internal {
-     for(uint i = 0; i < proposal.calldatas.length; i++){
+     for(uint i = 0; i < proposal.targets.length; i++){
              address target = proposal.targets[i];
              uint256 value = proposal.values[i];
              bytes memory data = proposal.calldatas[i];
@@ -464,10 +478,9 @@ function callProposal(Proposal memory proposal) internal {
                  emit CalldataExecuted();
                  (bool success, bytes memory returnData) = target.call{value:value}(data);
                  if(!success){
-                     revert ExecutionFailed(target, returnData);
+                     revert ExecutionFailed();
                  }
              }
-
          }
         proposals[proposal.id].state = ProposalState.Executed;
         proposals[proposal.id].executedAt = block.timestamp;
@@ -487,7 +500,8 @@ function callSelectedProposal(bytes32 proposalId, uint256[] memory customCalldat
                  (bool success, bytes memory returnData) = target.call{value:value}(data);
                   emit CalldataExecuted();
                  if(!success){
-                     revert ExecutionFailed(target, returnData);
+                     revert ExecutionFailed();
+                     
                  }
              
      }
@@ -504,7 +518,7 @@ function callSelectedProposal(bytes32 proposalId, uint256[] memory customCalldat
      
      if(votesFor > votesAgainst && votesFor > votesAbstain){   
         callProposal(proposal);
-    return;
+return;
          }
 
      }

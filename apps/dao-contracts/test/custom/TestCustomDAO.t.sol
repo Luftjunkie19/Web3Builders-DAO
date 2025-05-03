@@ -155,7 +155,7 @@ vm.prank(user2);
 
 
 
-customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 1, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
+customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 0, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
 
 
 uint256 proposalsAmountAfterProposal = customGovernor.proposalCount();
@@ -257,7 +257,7 @@ bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though",
 govToken.delegate(user2);
 vm.stopPrank();
 
-indicies=[0, 1];
+indicies=[1];
 CustomBuilderGovernor.Proposal memory wannaCastVoteFailProposal = customGovernor.getProposal(proposalId);
 console.log(wannaCastVoteFailProposal.isCustom);
 
@@ -338,11 +338,140 @@ CustomBuilderGovernor.Proposal memory proposalAfterQueued = customGovernor.getPr
 
 assert(proposalAfterQueued.state == CustomBuilderGovernor.ProposalState.Queued);
 
+
 customGovernor.executeProposal(proposalId);
 
 CustomBuilderGovernor.Proposal memory proposalAfterExecuted = customGovernor.getProposal(proposalId);
 
 assert(proposalAfterExecuted.state == CustomBuilderGovernor.ProposalState.Executed);
+
+}
+
+
+function testGetCustomRevertedExecutedProposalId() public  {
+    vm.startPrank(user2);
+
+// Mint and delegate tokens
+govToken.handInUserInitialTokens(
+    GovernmentToken.TokenReceiveLevel.MEDIUM,
+    GovernmentToken.TokenReceiveLevel.MEDIUM_LOW,
+    GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
+    GovernmentToken.TokenReceiveLevel.MEDIUM,
+    GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+    true
+);
+govToken.delegate(user2);
+vm.roll(block.number + 5);
+govToken.delegate(user2);
+uint256 pastVotes = govToken.getPastVotes(user2, block.number - 1);
+console.log(pastVotes, 'User Balance Before Casting Vote');
+// Create proposal
+proposalCreatedTargets = [address(govToken), address(govToken)];
+proposalCreatedValues = [0, 0];
+ proposalCreatedCalldata = [
+    abi.encodeWithSignature("punishMember(address,uint256)", user2, 15e18),
+    abi.encodeWithSignature("rewartUser(address,uint256)", user2, 20)
+];
+bytes32 proposalId = customGovernor.createProposal(
+    "because I say so",
+    proposalCreatedTargets,
+    proposalCreatedValues,
+    proposalCreatedCalldata,
+    CustomBuilderGovernor.UrgencyLevel.Medium,
+    true,
+    2400,
+    block.timestamp + 604800
+);
+vm.stopPrank();
+
+// Advance block so snapshot works
+
+
+
+
+// Advance time and activate proposal
+CustomBuilderGovernor.Proposal memory proposal = customGovernor.getProposal(proposalId);
+vm.warp(block.timestamp + proposal.votingDelay + 1);
+customGovernor.activateProposal(proposalId);
+
+// Vote after activation
+uint256[] memory indices= new uint256[](1); 
+indices[0] = 1;
+
+
+
+vm.startPrank(user2);
+customGovernor.castVote(proposalId, "reason", user2, 3, "0x", true, true, false, indices);
+vm.stopPrank();
+
+// Warp to end + delay, then queue & execute
+vm.warp(block.timestamp + proposal.endBlockTimestamp + 604800);
+customGovernor.queueProposal(proposalId);
+
+vm.expectRevert(CustomBuilderGovernor.ExecutionFailed.selector);
+
+customGovernor.executeProposal(proposalId);
+
+
+}
+
+
+function testCheckIfStandardGetsExecutionError() public {
+vm.startPrank(user2);
+
+// Mint and delegate tokens
+govToken.handInUserInitialTokens(
+    GovernmentToken.TokenReceiveLevel.MEDIUM,
+    GovernmentToken.TokenReceiveLevel.MEDIUM_LOW,
+    GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
+    GovernmentToken.TokenReceiveLevel.MEDIUM,
+    GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+    true
+);
+
+govToken.delegate(user2);
+vm.roll(block.number + 5);
+govToken.delegate(user2);
+uint256 pastVotes = govToken.getPastVotes(user2, block.number - 1);
+console.log(pastVotes, 'User Balance Before Casting Vote');
+// Create proposal
+
+proposalCreatedTargets = [address(govToken)];
+proposalCreatedValues = [0];
+proposalCreatedCalldata=[abi.encodeWithSignature("rewardsgUser(address,uint256)", user2, 15e18)];
+indicies.push(0);
+
+bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, false, 2400, block.timestamp + 604800); 
+
+govToken.delegate(user2);
+vm.stopPrank();
+
+
+CustomBuilderGovernor.Proposal memory proposal = customGovernor.getProposal(proposalId);
+
+
+vm.warp(block.timestamp + proposal.votingDelay + 2);
+
+customGovernor.activateProposal(proposalId);
+
+
+vm.prank(user2);
+customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 0, "0xx", proposal.isCustom, true, false, indicies);
+
+
+vm.warp(block.timestamp + proposal.endBlockTimestamp + 100);
+customGovernor.queueProposal(proposalId);
+
+
+
+vm.warp(block.timestamp + proposal.endBlockTimestamp + 1);
+
+vm.expectRevert(CustomBuilderGovernor.ExecutionFailed.selector);
+
+customGovernor.executeProposal(proposalId);
+
+
+
 
 
 }
@@ -351,9 +480,15 @@ assert(proposalAfterExecuted.state == CustomBuilderGovernor.ProposalState.Execut
 
 
 
-
-
 function testRewardingWorksProperly() public {
+
+ vm.startPrank(user2);
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, true); 
+  
+   govToken.delegate(user2);
+   
+   vm.stopPrank();
+
     vm.prank(user2);
     govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, true); 
   

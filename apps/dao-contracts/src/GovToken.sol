@@ -9,7 +9,7 @@ import {Nonces} from "../lib/openzeppelin-contracts/contracts/utils/Nonces.sol";
 import {Votes} from "../lib/openzeppelin-contracts/contracts/governance/utils/Votes.sol";
 import {Ownable} from "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 
-contract GovernmentToken is ERC20, Ownable, ERC20Permit, ERC20Votes, VotesExtended {
+contract GovernmentToken is ERC20, ERC20Permit, ERC20Votes, VotesExtended {
 
 error IntialTokensAlreadyReceived();
 error IntialTokensNotReceived();
@@ -63,7 +63,7 @@ mapping(TokenReceiveLevel => uint256) public web3IntrestOptions;
 mapping(KnowledgeVerificationTestRate => uint256) public kvtrOptions;
 
 
-    constructor() Ownable(msg.sender) ERC20("BuilderToken", "BUILD") ERC20Permit("BuilderToken") {
+    constructor() ERC20("BuilderToken", "BUILD") ERC20Permit("BuilderToken") {
       // Programming Seniority Level (PSR) options
       psrOptions[TokenReceiveLevel.LOW] = 15;
       psrOptions[TokenReceiveLevel.MEDIUM_LOW] = 40;
@@ -120,9 +120,6 @@ function totalSupply () public view virtual override(ERC20) returns (uint256) {
   return super.totalSupply();
 }
 
-function owner() public view virtual override(Ownable) returns (address) {
-  return super.owner();
-}
 
 function decimals() public view virtual override(ERC20) returns (uint8) {
   return 18;
