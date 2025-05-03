@@ -336,8 +336,23 @@ customGovernor.queueProposal(proposalId);
 
 CustomBuilderGovernor.Proposal memory proposalAfterQueued = customGovernor.getProposal(proposalId);
 
+vm.startPrank(user2);
 assert(proposalAfterQueued.state == CustomBuilderGovernor.ProposalState.Queued);
 
+govToken.delegate(user2);
+
+
+vm.warp(block.timestamp  + 2);
+
+
+console.log(govToken.getPastVotes(msg.sender, block.number - 1), "User Balance Before Casting Vote");
+
+vm.expectRevert(CustomBuilderGovernor.VotingPeriodOver.selector);
+
+customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 3, "0xx", true, true, false, indicies);
+
+
+vm.stopPrank();
 
 customGovernor.executeProposal(proposalId);
 
@@ -361,6 +376,7 @@ govToken.handInUserInitialTokens(
     true
 );
 govToken.delegate(user2);
+
 vm.roll(block.number + 5);
 govToken.delegate(user2);
 uint256 pastVotes = govToken.getPastVotes(user2, block.number - 1);
@@ -382,11 +398,9 @@ bytes32 proposalId = customGovernor.createProposal(
     2400,
     block.timestamp + 604800
 );
+
+console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
 vm.stopPrank();
-
-// Advance block so snapshot works
-
-
 
 
 // Advance time and activate proposal
@@ -398,7 +412,7 @@ customGovernor.activateProposal(proposalId);
 uint256[] memory indices= new uint256[](1); 
 indices[0] = 1;
 
-
+console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
 
 vm.startPrank(user2);
 customGovernor.castVote(proposalId, "reason", user2, 3, "0x", true, true, false, indices);
@@ -408,13 +422,65 @@ vm.stopPrank();
 vm.warp(block.timestamp + proposal.endBlockTimestamp + 604800);
 customGovernor.queueProposal(proposalId);
 
+console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
+
 vm.expectRevert(CustomBuilderGovernor.ExecutionFailed.selector);
 
 customGovernor.executeProposal(proposalId);
 
+console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
 
 }
 
+
+function testCheckIfStandardGetsQuorumError() public {
+vm.startPrank(user2);
+
+// Mint and delegate tokens
+govToken.handInUserInitialTokens(
+    GovernmentToken.TokenReceiveLevel.MEDIUM,
+    GovernmentToken.TokenReceiveLevel.MEDIUM_LOW,
+    GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
+    GovernmentToken.TokenReceiveLevel.MEDIUM,
+    GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+    true
+);
+
+govToken.delegate(user2);
+vm.roll(block.number + 5);
+govToken.delegate(user2);
+uint256 pastVotes = govToken.getPastVotes(user2, block.number - 1);
+console.log(pastVotes, 'User Balance Before Casting Vote');
+// Create proposal
+
+proposalCreatedTargets = [address(govToken)];
+proposalCreatedValues = [0];
+proposalCreatedCalldata=[abi.encodeWithSignature("rewardsgUser(address,uint256)", user2, 15e18)];
+indicies.push(0);
+
+bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, false, 2400, block.timestamp + 604800); 
+
+govToken.delegate(user2);
+vm.stopPrank();
+
+
+CustomBuilderGovernor.Proposal memory proposal = customGovernor.getProposal(proposalId);
+
+
+vm.warp(block.timestamp + proposal.votingDelay + 2);
+
+customGovernor.activateProposal(proposalId);
+
+
+
+vm.warp(block.timestamp + proposal.endBlockTimestamp + 100);
+vm.expectRevert(CustomBuilderGovernor.QuorumNotReached.selector);
+
+customGovernor.queueProposal(proposalId);
+
+
+
+}
 
 function testCheckIfStandardGetsExecutionError() public {
 vm.startPrank(user2);
@@ -472,10 +538,71 @@ customGovernor.executeProposal(proposalId);
 
 
 
+}
+
+
+function testCheckIfCustomGetsQuorumNotReached() public {
+    vm.startPrank(user2);
+
+// Mint and delegate tokens
+govToken.handInUserInitialTokens(
+    GovernmentToken.TokenReceiveLevel.MEDIUM,
+    GovernmentToken.TokenReceiveLevel.MEDIUM_LOW,
+    GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
+    GovernmentToken.TokenReceiveLevel.MEDIUM,
+    GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+    true
+);
+govToken.delegate(user2);
+
+vm.roll(block.number + 5);
+govToken.delegate(user2);
+uint256 pastVotes = govToken.getPastVotes(user2, block.number - 1);
+console.log(pastVotes, 'User Balance Before Casting Vote');
+// Create proposal
+proposalCreatedTargets = [address(govToken), address(govToken)];
+proposalCreatedValues = [0, 0];
+ proposalCreatedCalldata = [
+    abi.encodeWithSignature("punishMember(address,uint256)", user2, 15e18),
+    abi.encodeWithSignature("rewartUser(address,uint256)", user2, 20)
+];
+bytes32 proposalId = customGovernor.createProposal(
+    "because I say so",
+    proposalCreatedTargets,
+    proposalCreatedValues,
+    proposalCreatedCalldata,
+    CustomBuilderGovernor.UrgencyLevel.Medium,
+    true,
+    2400,
+    block.timestamp + 604800
+);
+
+console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
+vm.stopPrank();
+
+
+// Advance time and activate proposal
+CustomBuilderGovernor.Proposal memory proposal = customGovernor.getProposal(proposalId);
+vm.warp(block.timestamp + proposal.votingDelay + 1);
+customGovernor.activateProposal(proposalId);
+
+// Vote after activation
+uint256[] memory indices= new uint256[](1); 
+indices[0] = 1;
+
+console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
+
+
+// Warp to end + delay, then queue & execute
+vm.warp(block.timestamp + proposal.endBlockTimestamp + 604800);
+
+vm.expectRevert(CustomBuilderGovernor.QuorumNotReached.selector);
+
+customGovernor.queueProposal(proposalId);
+
 
 
 }
-
 
 
 

@@ -178,9 +178,6 @@ if(proposals[proposalId].state == ProposalState.Pending){
     revert VotingNotStarted();
 }
 
-if(proposals[proposalId].startBlockTimestamp + proposals[proposalId].votingDelay > block.timestamp){
-    revert VotingNotStarted();
-}
 
     if(block.timestamp > proposals[proposalId].endBlockTimestamp || proposals[proposalId].state != ProposalState.Active){
         revert VotingPeriodOver();
@@ -496,13 +493,14 @@ function callSelectedProposal(bytes32 proposalId, uint256[] memory customCalldat
              uint256 value = proposals[proposalId].values[customCalldataIndices[i]];
              bytes memory data = proposals[proposalId].calldatas[customCalldataIndices[i]];
 
-            
+            if(target != address(0)){  
                  (bool success, bytes memory returnData) = target.call{value:value}(data);
                   emit CalldataExecuted();
                  if(!success){
                      revert ExecutionFailed();
                      
                  }
+            }
              
      }
 }
