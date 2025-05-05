@@ -6,8 +6,7 @@ const data = new SlashCommandBuilder()
 
 module.exports = {
     data: data,
-    async execute(interaction:
-        any
+    async execute(interaction:any
     ) {
 try{
     await interaction.reply
