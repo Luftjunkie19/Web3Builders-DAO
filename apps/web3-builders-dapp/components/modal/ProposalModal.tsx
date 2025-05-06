@@ -31,13 +31,13 @@ message:'Description must be at least 1 character',
 }),
 functionsCalldatas:z.array(z.object({
 target: z.string().startsWith('0x').length(42,{message:'Invalid address'}),
-values: z.bigint(),
+value: z.bigint(),
 calldata: z.string(),
 destinationAddress: z.string().startsWith('0x').length(42,{message:'Invalid address'}),
 tokenAmount:z.bigint({'message':'Token Amount must be a number'}),
 })),
 urgencyLevel: z.bigint({'message':'urgencyLevel must be a number'}),
-isCustom: z.boolean(),
+isCustom: z.string().min(1,{'message':'The voting type has to be selected must be a boolean'}),
 customVotesOptions: z.array(z.object({
 title: z.string(),
 optionId: z.number({'message':'optionId must be a number'}),
@@ -45,12 +45,30 @@ calldataIndicies: z.array(z.number()).optional(),
 })).length(5).optional()
 });
 
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Form } from '../ui/form';
+
+
 function ProposalModal({children}: Props) {
 
 const [currentStep, setCurrentStep] = useState<number>(0);
 
 const methods = useForm<z.infer<typeof proposalObject>>({
+  resolver: zodResolver(proposalObject),
+  defaultValues: {
+    title: "",
+    longDescription: "",
+    isCustom: '',
+    functionsCalldatas: [],
+    urgencyLevel: BigInt(0),
+    customVotesOptions: []
+  }
 });
+
+function onSubmit(values: z.infer<typeof proposalObject>) {
+  console.log(values);
+}
+
 
 return (
 <Dialog>
@@ -66,9 +84,11 @@ return (
     </DialogHeader>
 
     <FormProvider {...methods}>
-
+<Form {...methods}>
+  <form onSubmit={methods.handleSubmit(onSubmit)} className='flex flex-col gap-2 w-full'>
 <StepContainer currentStep={currentStep}/>
 
+<div className="flex flex-col pt-3 gap-4">
 <div className="flex gap-3 items-center justify-start
 ">
 {
@@ -100,12 +120,16 @@ setCurrentStep(currentStep + 1);
 </div>
 
 
-{
-  currentStep === 4 &&
+
 <Button type='submit' className='hover:bg-(--hacker-green-4) cursor-pointer transition-all duration-500  px-6 hover:text-zinc-800 '>
   Propose
 </Button>
-}
+</div>
+
+  </form>
+
+
+</Form>
     </FormProvider>
 
   </DialogContent>

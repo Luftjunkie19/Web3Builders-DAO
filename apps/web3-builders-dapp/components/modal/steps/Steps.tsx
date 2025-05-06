@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ethers } from 'ethers'
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 
 type Props = {
   register:UseFormRegister<FieldValues>,
@@ -26,20 +27,34 @@ type Props = {
 
 }
 
- function FirstStepContent({register, setValue}: Props) {
+ function FirstStepContent({register, setValue, control}: Props) {
   return (
     <>
-  <div className="flex flex-col gap-0">
-  <Label htmlFor="title" className='text-white text-base font-light'>Title</Label>
-  <Input {...register('title')} id='title' placeholder='Enter your proposal title'
-    className='text-white border border-(--hacker-green-4) outline-none '/>
-  </div>
 
 
-  <div className="flex flex-col gap-1">
-  <Label htmlFor="proposal-type" className='text-white text-base font-light'>Voting Type</Label>
-  <Select {...register('isCustom')} onValueChange={(value) => {
-setValue('isCustom', value === 'custom' ? true : false);
+<FormField
+          control={control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-white text-base font-light'>Title</FormLabel>
+              <FormControl>
+                <Input className='border border-(--hacker-green-4)' placeholder="Proposal Title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+<FormField
+          control={control}
+          name="isCustom"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-white text-base font-light'>Title</FormLabel>
+              <FormControl>
+              <Select {...field} value={field.value ? 'custom' : 'standard'} onValueChange={(value) => {
+setValue('isCustom', value);
   }}>
   <SelectTrigger className="w-full text-white border border-(--hacker-green-4)">
     <SelectValue placeholder="Voting Type" />
@@ -49,16 +64,51 @@ setValue('isCustom', value === 'custom' ? true : false);
     <SelectItem className='text-white' value="custom">Custom Voting</SelectItem>
   </SelectContent>
 </Select>
-  </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-  <div className="flex flex-col gap-1">
-  <Label htmlFor="textarea" className='text-white text-base font-light'>Description</Label>
-  <Textarea {...register('longDescription')} id='textarea'  className='text-white border border-(--hacker-green-4) outline-none resize-none
+
+
+<FormField
+          control={control}
+          name="shortDescripton"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-white text-base font-light'>Description (Onchain)</FormLabel>
+              <FormControl>
+                <Input className='border border-(--hacker-green-4)' placeholder="Proposal Description" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+<FormField
+          control={control}
+          name="longDescription"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-white text-base font-light'>Description (Offchain)</FormLabel>
+              <FormControl>
+              <Textarea {...field}  id='textarea'  className='text-white border border-(--hacker-green-4) outline-none resize-none
   h-28
   '
   placeholder='Enter your proposal description...'
   />  
-  </div>
+                
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+
+
+
+
     </>
   )
 }
@@ -72,31 +122,27 @@ setValue('isCustom', value === 'custom' ? true : false);
   setValue
  }: Props) {
 
-const [functionType, setFunctionType] = React.useState<{target: `0x${string}` | null,
-values: BigInt | null,
-calldata: string | null}>({
-  target: null,
-  values: null,
-  calldata: null
-});
+const {fields, append, update} = useFieldArray({name: 'functionsCalldatas', control});
 
-const {fields, append, remove, update, prepend}=useFieldArray({
-  control,
-  name:'functionsCalldatas'
-});
+
+
+const [callDataIndex, setCallDataIndex] = React.useState(0);
 
   return (
     <>
-  <div className="flex flex-col gap-1">
-  <Label htmlFor="proposal-type" className='text-white text-base font-light'>Proposal Urgrency</Label>
-  <Select
-  {...register(
-    'urgencyLevel',{
-      onChange(event) {
-        setValue('urgencyLevel', BigInt(Number(event.target.value)))
-      },
-    }
-  )}
+
+<FormField
+          control={control}
+          name="urgencyLevel"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-white text-base font-light'>Urgency Level</FormLabel>
+              <FormControl>
+              <Select {...field}
+  value={field.value.toString()}
+  onValueChange={(value) => {
+    setValue('urgencyLevel', BigInt(value));
+  }}
   >
   <SelectTrigger className="w-full text-white border border-(--hacker-green-4)">
     <SelectValue placeholder="Proposal Urgency" />
@@ -107,27 +153,28 @@ const {fields, append, remove, update, prepend}=useFieldArray({
     <SelectItem className='text-white' value="2">High</SelectItem>
   </SelectContent>
 </Select>
+                
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-  </div>
 
-
-  <div className="flex flex-col gap-1">
-  <Label htmlFor="proposalFunction" className='text-white text-base font-light'>Proposal Function Calldata</Label>
-  <p className='text-sm text-gray-400'>
-    If you want to call any specific function in the proposal, select and pass the parameters here.
-  </p>
-
-  <Select 
+<FormField
+          control={control}
+          name={`functionsCalldatas.${callDataIndex}.calldata`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-white text-base font-light'>Urgency Level</FormLabel>
+              <FormControl>
+              <Select 
  onValueChange={
   (value) => {
-  setFunctionType({
-    target: null,
-    values: null,
-    calldata: value
-  })
+    setValue(`functionsCalldatas.${callDataIndex}.calldata`, value);
   }
  }
- name='proposalFunction'
+ {...field}
  >
   <SelectTrigger className="w-full text-white border border-(--hacker-green-4)">
     <SelectValue placeholder="Proposal Function" />
@@ -139,26 +186,63 @@ const {fields, append, remove, update, prepend}=useFieldArray({
     <SelectItem className='text-white' value="punishUser(address, uint256)">Punish User Account</SelectItem>
   </SelectContent>
 </Select>
-  </div>
+                
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-  {functionType.calldata && functionType.calldata.trim() !== '' && <>
-    <div className="flex flex-col gap-1">
-  <Label htmlFor="userAddr" className='text-white text-base font-light'>User Address</Label>
-  <Input id='userAddr' placeholder='Enter the user address'
-    className='text-white border border-(--hacker-green-4) outline-none '/>
-  </div>
 
-  <div className="flex flex-col gap-1">
-  <Label htmlFor="amount" className='text-white text-base font-light'>Amount</Label>
-  <Input id='amount' placeholder='Enter the amount of tokens to reward or punish' type='number'  min={0} max={10000}
-    className='text-white border border-(--hacker-green-4) outline-none '/>
-  </div>
+
+  {watch(`functionsCalldatas.${callDataIndex}.calldata`) && watch(`functionsCalldatas.${callDataIndex}.calldata`).trim() !== '' && <>
+
+
+<FormField
+          control={control}
+          name={`functionsCalldatas.${callDataIndex}.destinationAddress`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-white text-base font-light'>Destination Address</FormLabel>
+              <FormControl>
+<Input {...field} id='userAddr' placeholder='Enter the user address'
+className='text-white border border-(--hacker-green-4) outline-none '/>
+                
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+<FormField
+          control={control}
+          name={`functionsCalldatas.${callDataIndex}.tokenAmount`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-white text-base font-light'>Amount</FormLabel>
+              <FormControl>
+<Input {...field} value={Number(field.value)} id='tokenAmount' placeholder='Enter the user address' type='number'
+className='text-white border border-(--hacker-green-4) outline-none '/>
+                
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
 
   
   </>}
 
 <Button onClick={() => {
-
+append({
+  calldata: watch(`functionsCalldatas.${callDataIndex}.calldata`),
+  destinationAddress: watch(`functionsCalldatas.${callDataIndex}.destinationAddress`),
+  tokenAmount: watch(`functionsCalldatas.${callDataIndex}.tokenAmount`),
+  target: watch(`functionsCalldatas.${callDataIndex}.target`),
+  value: BigInt(0),
+});
+setCallDataIndex(callDataIndex + 1);
 }} className='hover:bg-(--hacker-green-4) hover:scale-95 cursor-pointer transition-all duration-500  px-6 hover:text-zinc-800 '>Insert Calldata</Button>
 
     </>
@@ -200,6 +284,8 @@ const {fields, append, remove, update, prepend}=useFieldArray({
   name:'customVotesOptions'
 });
 
+const [optionId, setOptionId] = React.useState(0);
+
   return (
     <>
     {
@@ -229,12 +315,12 @@ const {fields, append, remove, update, prepend}=useFieldArray({
         <OptionToCall key={field.id} {...field} index={index} removeOption={remove} updateOption={update} />
       )
     })}
-
-
   </div>
 
 <div className="self-end">
-  <Button onClick={addCustomVoteOption} className='hover:bg-(--hacker-green-4) hover:scale-95 cursor-pointer transition-all duration-500  px-6 hover:text-zinc-800 '>Add Option</Button>
+  <Button onClick={addCustomVoteOption} className='hover:bg-(--hacker-green-4) hover:scale-95 cursor-pointer transition-all duration-500  px-6 hover:text-zinc-800 '>
+    Add Option
+  </Button>
 </div>
 
    </div>
