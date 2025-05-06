@@ -7,6 +7,7 @@ import SidebarComponent from "@/components/sidebar/SidebarComponent";
 import ReduxProvider from "@/lib/providers/ReduxProvider";
 import WagmiSetupProvider
 from "@/lib/providers/WagmiSetupProvider";
+import { Toaster } from '@/components/ui/sonner';
 
 
 const poppins = Poppins({
@@ -56,7 +57,7 @@ export default  function RootLayout({
   <div className="flex flex-col w-full h-full gap-2">
 <Navbar/>
 {children}
-
+<Toaster closeButton />
   </div>
 
 

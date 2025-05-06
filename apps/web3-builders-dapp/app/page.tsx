@@ -11,6 +11,9 @@ export default function Home() {
       <div className="w-full h-full p-2">
 
             <ProposalModal/>
+
+
+            
       </div>
             <ProposalList/>
 
