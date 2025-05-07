@@ -18,7 +18,9 @@ const emojiRegex = /^[^\p{Emoji_Presentation}\p{Extended_Pictographic}]*$/u;
 
 export const proposalObject = z.object({
   title: z.string().min(1),
-shortDescripton: z.string().min(1,{
+
+  shortDescripton: z.string().min(1,{
+
 message: 'Title must be at least 1 character',
 }
 ).max(100,
@@ -29,6 +31,7 @@ message: 'Title must be at least 1 character',
 longDescription: z.string().min(1, {
 message:'Description must be at least 1 character',
 }),
+
 functionsCalldatas:z.array(z.object({
 target: z.string().startsWith('0x').length(42,{message:'Invalid address'}),
 value: z.bigint(),
@@ -36,22 +39,35 @@ calldata: z.string(),
 destinationAddress: z.string().startsWith('0x').length(42,{message:'Invalid address'}),
 tokenAmount:z.bigint({'message':'Token Amount must be a number'}),
 })),
+
+proposalEndTime: z.date({'message':'proposalEndTime must be a date'}),
+proposalDelay: z.number({'message':'proposalDelay must be a number'}),
+proposalDelayUnit: z.number({'message':'proposalDelayUnit must be a number'}),
+
 urgencyLevel: z.bigint({'message':'urgencyLevel must be a number'}),
-isCustom: z.string().min(1,{'message':'The voting type has to be selected must be a boolean'}),
+
+isCustom: z.string().min(1,{'message':'The voting type must be selected'}),
+
 customVotesOptions: z.array(z.object({
 title: z.string(),
-optionId: z.number({'message':'optionId must be a number'}),
 calldataIndicies: z.array(z.number()).optional(),
-})).length(5).optional()
+})).length(5).optional(),
+
 });
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form } from '../ui/form';
+import { useWriteContract } from 'wagmi';
+import { GOVERNOR_CONTRACT_ADDRESS, governorContractAbi } from '@/contracts/governor/config';
+import { tokenContractAbi } from '@/contracts/token/config';
+import { encodeFunctionData, prepareEncodeFunctionData } from 'viem';
+import { toast } from 'sonner';
 
 
 function ProposalModal({children}: Props) {
 
 const [currentStep, setCurrentStep] = useState<number>(0);
+const {writeContract}=useWriteContract({})
 
 const methods = useForm<z.infer<typeof proposalObject>>({
   resolver: zodResolver(proposalObject),
@@ -61,12 +77,60 @@ const methods = useForm<z.infer<typeof proposalObject>>({
     isCustom: '',
     functionsCalldatas: [],
     urgencyLevel: BigInt(0),
-    customVotesOptions: []
+    customVotesOptions: [
+      {
+        'calldataIndicies':[],
+        'title':'',
+      },
+      {
+        'calldataIndicies':[],
+        'title':'',
+      },
+      {
+        'calldataIndicies':[],
+        'title':'',
+      },
+      {
+        'calldataIndicies':[],
+        'title':'',
+      },
+      {
+        'calldataIndicies':[],
+        'title':'',
+      }
+    ]
   }
 });
 
 function onSubmit(values: z.infer<typeof proposalObject>) {
   console.log(values);
+
+
+  const calldataAction = prepareEncodeFunctionData({
+    abi: tokenContractAbi,
+    functionName: 'transfer',
+  })
+
+  const targets= values['functionsCalldatas'].map((item) => item['target']);
+  const calldataValues = values['functionsCalldatas'].map((item) => BigInt(item['value']));
+  const calldataEndodedBytes = values['functionsCalldatas'].map((item) => {
+    const endodedBytes = encodeFunctionData({
+     ...calldataAction,
+      args: [item['destinationAddress'], BigInt(Number(item['tokenAmount']) * 1e18)],
+    });
+    return endodedBytes;
+  });
+
+
+ const result = writeContract({
+      abi: governorContractAbi,
+      address: GOVERNOR_CONTRACT_ADDRESS,
+      functionName:'createProposal',
+      args:[values['shortDescripton'], targets, calldataValues, calldataEndodedBytes, values['urgencyLevel'], values['isCustom'] === 'standard' ? false : true, BigInt(values['proposalDelay']), BigInt(new Date(values['proposalEndTime']).getTime() / 1000)],
+    });
+  
+
+    methods.reset();
 }
 
 
@@ -85,10 +149,30 @@ return (
 
     <FormProvider {...methods}>
 <Form {...methods}>
-  <form onSubmit={methods.handleSubmit(onSubmit)} className='flex flex-col gap-2 w-full'>
+  <form onSubmit={methods.handleSubmit(onSubmit,(err)=>{
+    setCurrentStep(0);
+    Object.values(err).map((item) => toast(item.message)); 
+    console.log(err);
+  })}  className='flex flex-col gap-2 w-full'>
 <StepContainer currentStep={currentStep}/>
 
-<div className="flex flex-col pt-3 gap-4">
+
+
+{
+  currentStep === 4 &&
+  <Button type='submit'  className='hover:bg-(--hacker-green-4) cursor-pointer transition-all duration-500 mt-6 px-6 hover:text-zinc-800 '>
+  Propose
+</Button>
+}
+
+
+  </form>
+
+
+</Form>
+
+    </FormProvider>
+    <div className="flex flex-col pt-3 gap-4">
 <div className="flex gap-3 items-center justify-start
 ">
 {
@@ -105,7 +189,7 @@ setCurrentStep(currentStep - 1);
 }
 
 {
-  currentStep !== 3 &&
+  currentStep !== 4 &&
 <div className='flex justify-end'>
 <Button onClick={() => {
 setCurrentStep(currentStep + 1);
@@ -121,16 +205,7 @@ setCurrentStep(currentStep + 1);
 
 
 
-<Button type='submit' className='hover:bg-(--hacker-green-4) cursor-pointer transition-all duration-500  px-6 hover:text-zinc-800 '>
-  Propose
-</Button>
 </div>
-
-  </form>
-
-
-</Form>
-    </FormProvider>
 
   </DialogContent>
 </Dialog>
