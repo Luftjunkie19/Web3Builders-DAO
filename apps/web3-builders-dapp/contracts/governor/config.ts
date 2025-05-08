@@ -1,4 +1,4 @@
-export const GOVERNOR_CONTRACT_ADDRESS = "0xCdbf9309Ec119F60cd0e251267861ed75B175c12";
+export const GOVERNOR_CONTRACT_ADDRESS = "0xE6f609C9A80F02B89baA1Be8E54E54Aac52bf512";
 
 
 export const governorContractAbi= [{"type":"constructor",

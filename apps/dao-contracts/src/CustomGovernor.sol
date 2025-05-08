@@ -144,6 +144,11 @@ struct HighestVotedCustomOption{
     bool isExecutable;
 }
 
+struct ProposalArrayItem {
+    bytes32 proposalId;
+    uint256 index;
+}
+
 // Variables
 uint256 public constant MIN_VOTING_PERIOD = 100; // 100 blocks
 uint256 public constant MAX_VOTING_PERIOD = 1000; // 1000 blocks
@@ -167,10 +172,7 @@ mapping(bytes32 => mapping(address => Vote)) public proposalVotes; // proposalId
 mapping(bytes32 => address[]) public proposalVoters;
 mapping(address => Vote[]) public userVotes; // user address to proposalId to vote
 mapping(address=> Proposal[]) public userProposals; // user address to proposalId to vote
-
-
-
-
+ProposalArrayItem[] public allProposals;
 
 modifier isVotingActive(bytes32 proposalId){
 
@@ -395,6 +397,8 @@ function getProposalQuorumNeeded(bytes32 proposalId) public view returns (uint25
         proposals[proposalId] = proposal;
       userProposals[msg.sender].push(proposal);
      
+     allProposals.push(ProposalArrayItem(proposalId, proposalCount));
+
       proposalCount++;
      emit ProposalCreated(proposalId, msg.sender);
 

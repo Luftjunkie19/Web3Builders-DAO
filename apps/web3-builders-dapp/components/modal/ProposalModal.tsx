@@ -6,7 +6,7 @@ import { Button } from '../ui/button'
 import { FormProvider, useForm
 } from 'react-hook-form'
 import { StepContainer } from './steps/Steps';
-import {ethers} from 'ethers';
+
 
 type Props = {children: React.ReactNode}
 // Emoji regex — catches most emojis, flags, skin tones, etc.
@@ -57,17 +57,20 @@ calldataIndicies: z.array(z.number()).optional(),
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form } from '../ui/form';
-import { useWriteContract } from 'wagmi';
+import { useAccount, useWatchContractEvent, useWriteContract } from 'wagmi';
 import { GOVERNOR_CONTRACT_ADDRESS, governorContractAbi } from '@/contracts/governor/config';
-import { tokenContractAbi } from '@/contracts/token/config';
+import { TOKEN_CONTRACT_ADDRESS, tokenContractAbi } from '@/contracts/token/config';
 import { encodeFunctionData, prepareEncodeFunctionData } from 'viem';
 import { toast } from 'sonner';
+import { FaCheckCircle, FaTruckLoading } from 'react-icons/fa';
 
 
 function ProposalModal({children}: Props) {
-
+const {address}=useAccount();
 const [currentStep, setCurrentStep] = useState<number>(0);
-const {writeContract}=useWriteContract({})
+const {writeContractAsync,writeContract, data, isError: writeContractIsError, error: writeContractError, isPending, isIdle, isPaused, isSuccess}=useWriteContract();
+
+
 
 const methods = useForm<z.infer<typeof proposalObject>>({
   resolver: zodResolver(proposalObject),
@@ -103,6 +106,7 @@ const methods = useForm<z.infer<typeof proposalObject>>({
 });
 
 function onSubmit(values: z.infer<typeof proposalObject>) {
+ try{
   console.log(values);
 
 
@@ -122,16 +126,53 @@ function onSubmit(values: z.infer<typeof proposalObject>) {
   });
 
 
- const result = writeContract({
+
+
+
+
+
+writeContractAsync({
       abi: governorContractAbi,
       address: GOVERNOR_CONTRACT_ADDRESS,
+      type:'eip1559',
       functionName:'createProposal',
-      args:[values['shortDescripton'], targets, calldataValues, calldataEndodedBytes, values['urgencyLevel'], values['isCustom'] === 'standard' ? false : true, BigInt(values['proposalDelay']), BigInt(new Date(values['proposalEndTime']).getTime() / 1000)],
+      args:[values['shortDescripton'], targets, calldataValues, calldataEndodedBytes, BigInt(values['urgencyLevel']), values['isCustom'] === 'standard' ? false : true, BigInt(values['proposalDelay']), BigInt(new Date(values['proposalEndTime']).getTime()) / BigInt(1000)],
+    },{
+      onSuccess: (data) => {
+      console.log(data);
+      },onError: (error) => {
+        console.log(error);
+        toast('Proposal creation failed 🤬 ! Try again later 😉');
+      },
+      'onSettled': (data) => {
+        console.log(data);
+        toast('Proposal created successfully 🎉 !');
+   
+      }
     });
-  
+    
+    if(writeContractError){
+      console.log(writeContractError);
+      
+      toast('Proposal creation failed 🤬 ! Try again later 😉');
+    }
 
-    methods.reset();
+ }catch(err){
+  console.log(err);
+ }
+
+
 }
+
+
+useWatchContractEvent({
+  address: TOKEN_CONTRACT_ADDRESS,
+  abi:governorContractAbi,
+  eventName: 'ProposalCreated',
+  onLogs(logs) {
+    console.log('New logs!', logs)
+  },
+})
 
 
 return (
@@ -145,6 +186,27 @@ return (
       <DialogDescription>
         Make a proposal to the DAO, and vote for it to be implemented in the future. 
       </DialogDescription>
+
+      <Button onClick={()=>{
+        writeContract({
+          abi: tokenContractAbi,
+          address: TOKEN_CONTRACT_ADDRESS,
+          type:'eip1559',
+          functionName:'delegate',
+          args:[address],
+        },{
+          onSuccess: (data) => {
+          console.log(data);
+          },onError: (error) => {
+            console.log(error);
+            toast('Delegated failed 🤬 ! Try again later 😉');
+          },
+          'onSettled': (data) => {
+            console.log(data);
+            toast('Delegated Tokens successfully 🎉 !');
+          }
+        });
+      }}>Delegate Tokens !</Button>
     </DialogHeader>
 
     <FormProvider {...methods}>
@@ -154,12 +216,40 @@ return (
     Object.values(err).map((item) => toast(item.message)); 
     console.log(err);
   })}  className='flex flex-col gap-2 w-full'>
-<StepContainer currentStep={currentStep}/>
+    {methods.formState.isSubmitted ? 
+    <div className='flex flex-col gap-2 w-full'>
+
+{isPending ? <div className='flex flex-col gap-2 items-center w-full'>
+
+<FaTruckLoading className=' animate-spin text-blue-500 text-6xl'/>
+
+<p className='text-white'>Transaction is pending...</p>
+
+</div> : isSuccess &&
+<div className='flex flex-col items-center gap-6 w-full'>
+
+<FaCheckCircle className=' text-(--hacker-green-4) text-6xl'/>
+
+<p className='text-white'>Transaction is Succeeded.</p>
+
+</div>}
+
+{ writeContractError && <>
+  <p className='text-red-500'>{writeContractError.name}</p>
+  <p>{writeContractError.message}</p>
+  <Button onClick={() => console.log(writeContractError.cause)} className='hover:bg-red-500 cursor-pointer transition-all duration-500 mt-6 px-6 hover:text-zinc-800 '>
+    See the Cause
+  </Button>
+</>}
+    </div> 
+    :
+  <StepContainer currentStep={currentStep}/>
+    }
 
 
 
 {
-  currentStep === 4 &&
+  currentStep === 4 && !methods.formState.isSubmitted &&
   <Button type='submit'  className='hover:bg-(--hacker-green-4) cursor-pointer transition-all duration-500 mt-6 px-6 hover:text-zinc-800 '>
   Propose
 </Button>

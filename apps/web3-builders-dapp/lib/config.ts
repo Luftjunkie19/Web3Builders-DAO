@@ -1,15 +1,15 @@
 import { http, createConfig } from 'wagmi'
 import { getDefaultConfig } from "connectkit";
-import { holesky } from 'wagmi/chains'
+import { sepolia } from 'wagmi/chains'
 
 export const config = createConfig(
   getDefaultConfig({
     // Your dApps chains
-    chains: [holesky],
+    chains: [sepolia],
     transports: {
       // RPC URL for each chain
-      [holesky.id]: http(
-        `https://eth-holesky.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_ID}`,
+      [sepolia.id]: http(
+        `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_ID}`,
       ),
     },
 
