@@ -1,8 +1,7 @@
-import { Check, CircleArrowDownIcon, CircleArrowUp, InfoIcon, X } from 'lucide-react'
-import React from 'react';
-import Link from "next/link";
-import { PiHandCoinsFill } from 'react-icons/pi';
-import ProposalCallbackItem from './ProposalCallbackItem';
+'use client';
+
+
+import React from 'react';;
 import { GOVERNOR_CONTRACT_ADDRESS, governorContractAbi } from '@/contracts/governor/config';
 import { useReadContract } from 'wagmi';
 import ProposalElementWrapper from './ProposalElementWrapper';
@@ -19,7 +18,7 @@ function ProposalElement({
     address: GOVERNOR_CONTRACT_ADDRESS,
     functionName: 'allProposals',
     args:[
-      proposalIndex
+      BigInt(Number(proposalIndex))
     ]
   });
 
@@ -28,7 +27,9 @@ function ProposalElement({
 
 
   return (
-   data as any && <ProposalElementWrapper data={(data as any)[0] as `0x${string}`} />
+<>
+{data && <ProposalElementWrapper data={(data as [`0x${string}`, BigInt])[0] as `0x${string}`}/>}
+</>
   )
 }
 

@@ -22,14 +22,6 @@ function ProposalList({}: Props) {
   });
 
 
-  const proposalDisplay= function () {
-   
-    return  Array(proposalsCount as number).fill(0).map((_,index)=>(
-       <ProposalElement key={index} proposalIndex={index} /> 
-    ))
-  
-    
-  }
 
 
   const {writeContract}=useWriteContract();
@@ -42,21 +34,7 @@ function ProposalList({}: Props) {
    <DropdownBar/>
 <div className="flex flex-col overflow-y-auto items-center gap-6  w-full">
 
-
-<Button
-onClick={()=>{
-writeContract({
-  abi:tokenContractAbi,
-  address:TOKEN_CONTRACT_ADDRESS,
-  functionName:'handInUserInitialTokens',
-  args:[1,1,1,1,1,false]
-})
-}}
->
-  handle In intial tokens
-</Button>
-
-{proposalsCount as number && proposalDisplay()}
+{proposalsCount as BigInt && Number(proposalsCount) as number && Array(Number(proposalsCount)).fill(0).map((_,index)=>(<ProposalElement key={index} proposalIndex={index} />))}
 
 </div>
     </div>

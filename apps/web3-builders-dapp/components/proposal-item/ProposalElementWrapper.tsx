@@ -1,3 +1,5 @@
+'use client';
+
 import { GOVERNOR_CONTRACT_ADDRESS, governorContractAbi } from '@/contracts/governor/config';
 import { Check, CircleArrowUp, InfoIcon, X } from 'lucide-react';
 import Link from 'next/link';
@@ -5,7 +7,6 @@ import React from 'react'
 import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import ProposalCallbackItem from './ProposalCallbackItem';
 import { formatDistanceStrict } from 'date-fns';
-import { toast } from 'sonner';
 
 import { ethers } from 'ethers';
 
@@ -52,9 +53,11 @@ const {address}=useAccount();
         })
     }
 
+
+
   return (
-fullProposalObject && 
- <div  className='bg-zinc-800 border shadow-sm shadow-green-400 flex flex-col border-(--hacker-green-4) max-w-3xl w-full rounded-lg h-96'>
+<>
+{fullProposalObject && <div  className='bg-zinc-800 border shadow-sm shadow-green-400 flex flex-col border-(--hacker-green-4) max-w-3xl w-full rounded-lg h-96'>
       <div className="w-full border-b border-(--hacker-green-4)">
       <div className="flex justify-between items-center px-3 py-2">
       <div onClick={()=>console.log(fullProposalObject)} className="flex items-center gap-1 text-white">
@@ -134,7 +137,8 @@ fullProposalObject &&
 </div>
         }
       </div>
-    </div>
+    </div>}
+</>
   )
 }
 

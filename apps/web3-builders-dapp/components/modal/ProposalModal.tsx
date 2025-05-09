@@ -6,6 +6,7 @@ import { Button } from '../ui/button'
 import { FormProvider, useForm
 } from 'react-hook-form'
 import { StepContainer } from './steps/Steps';
+import {readContract} from "@wagmi/core";
 
 
 type Props = {children: React.ReactNode}
@@ -63,6 +64,8 @@ import { TOKEN_CONTRACT_ADDRESS, tokenContractAbi } from '@/contracts/token/conf
 import { decodeEventLog, encodeFunctionData, prepareEncodeFunctionData } from 'viem';
 import { toast } from 'sonner';
 import { FaCheckCircle, FaTruckLoading } from 'react-icons/fa';
+import { config } from '@/lib/config';
+import supabase from '@/lib/db/dbConfig';
 
 
 function ProposalModal({children}: Props) {
@@ -74,22 +77,9 @@ const {data:receipt, isError, error, isLoading, isSuccess, isPending}=useWaitFor
   hash:data as `0x${string}`,
   'onReplaced': async (replaceData) => {
 
-        const receipt = await client!.waitForTransactionReceipt({hash: replaceData.replacedTransaction.hash as `0x${string}`});
-
-        const log = decodeEventLog({
-          abi: governorContractAbi,
-          'eventName': 'ProposalCreated',
-          data: receipt!.logs[0].data,
-        'topics': receipt!.logs[0].topics,
-        });
-
-        console.log(log.args);
-
-        toast('Proposal created successfully 🎉 !');
+       console.log(replaceData);
   },
   });
-
-
 
 
 const methods = useForm<z.infer<typeof proposalObject>>({
@@ -157,7 +147,98 @@ function onSubmit(values: z.infer<typeof proposalObject>) {
       'onSuccess': (data) => {
         console.log(data);
         toast('Proposal Creation Transaction Created successfully 🎉 !');
-      }
+      },
+      onSettled: async (data, error, variables, context)=> {
+        console.log(data);
+        console.log(error);
+        console.log(variables);
+        console.log(context);
+
+         const receipt = await client!.waitForTransactionReceipt({hash: data as `0x${string}`});
+
+        const log = decodeEventLog({
+          abi: governorContractAbi,
+          'eventName': 'ProposalCreated',
+          data: receipt!.logs[0].data,
+        'topics': receipt!.logs[0].topics,
+        });
+
+        console.log(log.args);
+
+        const {id, proposer}=log.args as unknown as {id: BigInt, proposer: `0x${string}`};
+
+        const proposalSet = await readContract(config, {
+          abi: governorContractAbi,
+          address: GOVERNOR_CONTRACT_ADDRESS,
+          functionName: 'getProposal',
+          args:[id],
+        });
+
+        if(proposalSet){
+
+          const proposalObj = await supabase.from('dao_proposals').insert([{
+            proposal_id: id,
+            proposer_id: proposer,
+            created_at: new Date(),
+            proposal_description: values['longDescription'],
+            proposal_title: values['title'],
+            isCustom: values['isCustom'] === 'custom' ? true : false,
+            proposal_delay: Number(values['proposalDelay']),
+            expires_at: new Date(Number(values['proposalEndTime'])),
+            
+          }]);
+
+          if(proposalObj.error) {
+             toast.error(proposalObj.error.message);
+            throw new Error(proposalObj.error.message);
+          }
+
+
+          const calldataRows = values.functionsCalldatas.map((item) => ({
+  proposal_id: id,
+  method_signature: encodeFunctionData({
+    abi: tokenContractAbi,
+    functionName: item.calldata.slice(0, item.calldata.indexOf('(')),
+    args: [item.destinationAddress, BigInt(Number(item.tokenAmount) * 1e18)],
+  }),
+  target_address: item.target,
+  value: Number(item.value),
+  addressParameter: item.destinationAddress,
+  amountParameter: Number(item.tokenAmount),
+  isFunctionRewarding: false,
+  isFunctionPunishing: false,
+  functionDisplayName: item.calldata,
+}));
+
+         const calldataObjs = await supabase.from('calldata_objects').insert(calldataRows); 
+
+         if(calldataObjs.error) {
+          toast.error(calldataObjs.error.message);
+            throw new Error(calldataObjs.error.message);
+          }
+
+
+   if (values.isCustom === 'custom' && values.customVotesOptions && values.customVotesOptions?.length > 0) {
+  const voteOptionRows = values.customVotesOptions.map((item, index) => ({
+    proposal_id: id,
+    calldata_indices: item.calldataIndicies,
+    voteOptionIndex: index,
+    isExecuting: item.calldataIndicies && item.calldataIndicies?.length > 0,
+    isDefeating: item.calldataIndicies && item.calldataIndicies?.length > 0,
+    voting_option_text: item.title,
+  }));
+
+  const voteOptionObjs = await supabase.from('dao_vote_options').insert(voteOptionRows);
+
+  if(voteOptionObjs.error) {
+    toast.error(voteOptionObjs.error.message);
+    throw new Error(voteOptionObjs.error.message);
+  }
+}
+
+
+        }
+      },
     });
 
  }catch(err){
