@@ -18,9 +18,12 @@ import {
 } from "@/components/ui/sidebar"
 import ProposalModal from '../modal/ProposalModal'
 import { ConnectKitButton } from 'connectkit'
+import { useAccount } from 'wagmi'
 
 
  function SidebarComponent({}: Props) {
+
+  const {address}=useAccount();
 
     
     // Menu items.
@@ -72,14 +75,14 @@ const items = [
 
               </SidebarMenu>
                
-                  <ProposalModal>
+                 {address && <ProposalModal>
                   <SidebarMenuButton className='hover:bg-(--hacker-green-4) cursor-pointer  transition-all w-full' asChild>
                <div className='flex items-center gap-2 px-2'>
                       <UserRoundPenIcon />
                       <span>Propose</span>
                </div>
                   </SidebarMenuButton>
-                  </ProposalModal>
+                  </ProposalModal>}
              
             </SidebarGroupContent>
           </SidebarGroup>

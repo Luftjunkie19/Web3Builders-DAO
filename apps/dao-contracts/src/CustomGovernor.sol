@@ -301,6 +301,18 @@ indicies= customCalldataIndices;
 isCustomExecutable = isExecutable;
 }
 
+function getAllProposals () public view returns (ProposalArrayItem[] memory) {
+    return allProposals;
+}
+
+function getAllUserVotes(address user) public view returns (Vote[] memory) {
+    return userVotes[user];
+}
+
+function getAllUserProposals(address user) public view returns (Proposal[] memory) {
+    return userProposals[user];
+}
+
 
 
 function getProposal(bytes32 proposalId) public view returns (Proposal memory) {
@@ -366,7 +378,7 @@ function getProposalQuorumNeeded(bytes32 proposalId) public view returns (uint25
         uint256 endBlockTimestamp
     ) public returns (bytes32) {
        
-       if(govToken.getPastVotes(msg.sender, block.number - 1) < getProposalThreshold()){
+       if(govToken.getPastVotes(msg.sender, block.number - 1) < getProposalThreshold() ||  govToken.getPastVotes(msg.sender, block.number - 1) == 0){
             revert NotElligibleToPropose();
         }
 

@@ -4,11 +4,16 @@ import React from 'react'
 import { Textarea } from '../ui/textarea'
 import { Button } from '../ui/button'
 import { Calendar, EllipsisIcon } from 'lucide-react'
+import { toast } from 'sonner';
+import { useAccount } from 'wagmi';
 
 
 type Props = {}
 
 function ProposalModal({}: Props) {
+
+  const {address}=useAccount();
+
   return (
     <>
     <div className="max-w-2xl my-6  drop-shadow-green-500 hover:-translate-y-1 transition-all duration-500 drop-shadow-sm mx-auto rounded-lg flex flex-col gap-2  w-full h-80 bg-zinc-800">
@@ -33,7 +38,11 @@ function ProposalModal({}: Props) {
   <Calendar className='text-(--hacker-green-4)'/>
 </button>
       </div>
-      <Button className='hover:bg-(--hacker-green-4) cursor-pointer transition-all duration-500  px-6 hover:text-zinc-800 mr-4'>Propose</Button>
+      <Button onClick={()=>{
+        if(!address){
+          toast.error('Please connect your wallet !');
+        }
+      }} className='hover:bg-(--hacker-green-4) cursor-pointer transition-all duration-500  px-6 hover:text-zinc-800 mr-4'>Propose</Button>
     </div>
     </div>
 

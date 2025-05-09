@@ -25,11 +25,9 @@ type Props = {
 
 }
 
- function FirstStepContent({register, setValue, control, watch}: Props) {
+ function FirstStepContent({setValue, control, watch}: Props) {
   return (
     <>
-
-
 <FormField
           control={control}
           name="title"
@@ -160,13 +158,19 @@ const [callDataIndex, setCallDataIndex] = React.useState(0);
         />
 
 {fields.length > 0 && <div className='flex justify-between py-4 px-2 items-center gap-3'>
-  <Button disabled={callDataIndex <= 0} onClick={() => setCallDataIndex(callDataIndex - 1)}>
+  <Button disabled={callDataIndex <= 0} onClick={(e) => {
+   e.preventDefault();
+   setCallDataIndex(callDataIndex - 1); 
+  }}>
     <ArrowLeft/>
   </Button>
 
 <p className='text-white'>{callDataIndex + 1}/{fields.length}</p>
 
-  <Button disabled={callDataIndex >= fields.length - 1} onClick={() => setCallDataIndex(callDataIndex + 1)}>
+  <Button disabled={callDataIndex >= fields.length - 1} onClick={(e) => {
+    e.preventDefault();
+    setCallDataIndex(callDataIndex + 1)
+    }}>
     <ArrowRight/>
   </Button>
   </div>}
@@ -243,7 +247,9 @@ callDataIndex===index && <div key={field.id}>
 
 
 
-<Button onClick={() => {
+<Button onClick={(e) => {
+e.preventDefault();
+
 append({
   calldata: '',
   destinationAddress: '',
@@ -299,13 +305,19 @@ const goForward=useCallback(() => {
    <div className='flex flex-col w-full gap-4'>
 
 {customVotesFields.length > 0 && <div className='flex justify-between py-4 px-2 items-center gap-3'>
-  <Button disabled={optionId <= 0} onClick={goBack}>
+  <Button disabled={optionId <= 0} onClick={(e)=>{
+    e.preventDefault();
+    goBack();
+  }}>
     <ArrowLeft/>
   </Button>
 
 <p className='text-white'>{optionId + 1}/{customVotesFields.length}</p>
 
-  <Button disabled={optionId >= customVotesFields.length - 1} onClick={goForward}>
+  <Button disabled={optionId >= customVotesFields.length - 1} onClick={(e)=>{
+    e.preventDefault();
+    goForward();
+  }}>
     <ArrowRight/>
   </Button>
   </div>}

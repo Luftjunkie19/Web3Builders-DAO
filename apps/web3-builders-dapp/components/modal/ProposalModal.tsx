@@ -27,7 +27,7 @@ message: 'Title must be at least 1 character',
 {
   message: 'Title must be less than 100 characters',
 }
-).regex(emojiRegex, 'Invalid title,emoji characters found'),
+).regex(emojiRegex, 'Invalid title, emoji characters found'),
 longDescription: z.string().min(1, {
 message:'Description must be at least 1 character',
 }),
@@ -57,10 +57,10 @@ calldataIndicies: z.array(z.number()).optional(),
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form } from '../ui/form';
-import { useAccount, useWatchContractEvent, useWriteContract } from 'wagmi';
+import { useAccount, usePublicClient, useTransaction, useWaitForTransactionReceipt, useWatchContractEvent, useWriteContract } from 'wagmi';
 import { GOVERNOR_CONTRACT_ADDRESS, governorContractAbi } from '@/contracts/governor/config';
 import { TOKEN_CONTRACT_ADDRESS, tokenContractAbi } from '@/contracts/token/config';
-import { encodeFunctionData, prepareEncodeFunctionData } from 'viem';
+import { decodeEventLog, encodeFunctionData, prepareEncodeFunctionData } from 'viem';
 import { toast } from 'sonner';
 import { FaCheckCircle, FaTruckLoading } from 'react-icons/fa';
 
@@ -68,7 +68,27 @@ import { FaCheckCircle, FaTruckLoading } from 'react-icons/fa';
 function ProposalModal({children}: Props) {
 const {address}=useAccount();
 const [currentStep, setCurrentStep] = useState<number>(0);
-const {writeContractAsync,writeContract, data, isError: writeContractIsError, error: writeContractError, isPending, isIdle, isPaused, isSuccess}=useWriteContract();
+const {writeContractAsync,writeContract, data, isError: writeContractIsError, error: writeContractError, isPending: writeContractIsPending, isIdle, isPaused, isSuccess: writeContractIsSuccess}=useWriteContract();
+const client = usePublicClient();
+const {data:receipt, isError, error, isLoading, isSuccess, isPending}=useWaitForTransactionReceipt({
+  hash:data as `0x${string}`,
+  'onReplaced': async (replaceData) => {
+
+        const receipt = await client!.waitForTransactionReceipt({hash: replaceData.replacedTransaction.hash as `0x${string}`});
+
+        const log = decodeEventLog({
+          abi: governorContractAbi,
+          'eventName': 'ProposalCreated',
+          data: receipt!.logs[0].data,
+        'topics': receipt!.logs[0].topics,
+        });
+
+        console.log(log.args);
+
+        toast('Proposal created successfully 🎉 !');
+  },
+  });
+
 
 
 
@@ -110,52 +130,35 @@ function onSubmit(values: z.infer<typeof proposalObject>) {
   console.log(values);
 
 
-  const calldataAction = prepareEncodeFunctionData({
-    abi: tokenContractAbi,
-    functionName: 'transfer',
-  })
 
   const targets= values['functionsCalldatas'].map((item) => item['target']);
   const calldataValues = values['functionsCalldatas'].map((item) => BigInt(item['value']));
-  const calldataEndodedBytes = values['functionsCalldatas'].map((item) => {
-    const endodedBytes = encodeFunctionData({
-     ...calldataAction,
+
+  console.log(calldataValues);
+
+  const calldataEndodedBytes = values['functionsCalldatas'].map((item) =>  encodeFunctionData({
+    abi: tokenContractAbi,
+    functionName: item.calldata.slice(0, item.calldata.indexOf('(')),
       args: [item['destinationAddress'], BigInt(Number(item['tokenAmount']) * 1e18)],
-    });
-    return endodedBytes;
-  });
+    }));
 
 
-
-
-
-
-
-writeContractAsync({
+  writeContractAsync({
       abi: governorContractAbi,
       address: GOVERNOR_CONTRACT_ADDRESS,
       type:'eip1559',
       functionName:'createProposal',
       args:[values['shortDescripton'], targets, calldataValues, calldataEndodedBytes, BigInt(values['urgencyLevel']), values['isCustom'] === 'standard' ? false : true, BigInt(values['proposalDelay']), BigInt(new Date(values['proposalEndTime']).getTime()) / BigInt(1000)],
     },{
-      onSuccess: (data) => {
-      console.log(data);
-      },onError: (error) => {
+     onError: (error) => {
         console.log(error);
         toast('Proposal creation failed 🤬 ! Try again later 😉');
       },
-      'onSettled': (data) => {
+      'onSuccess': (data) => {
         console.log(data);
-        toast('Proposal created successfully 🎉 !');
-   
+        toast('Proposal Creation Transaction Created successfully 🎉 !');
       }
     });
-    
-    if(writeContractError){
-      console.log(writeContractError);
-      
-      toast('Proposal creation failed 🤬 ! Try again later 😉');
-    }
 
  }catch(err){
   console.log(err);
@@ -164,15 +167,6 @@ writeContractAsync({
 
 }
 
-
-useWatchContractEvent({
-  address: TOKEN_CONTRACT_ADDRESS,
-  abi:governorContractAbi,
-  eventName: 'ProposalCreated',
-  onLogs(logs) {
-    console.log('New logs!', logs)
-  },
-})
 
 
 return (
@@ -195,15 +189,13 @@ return (
           functionName:'delegate',
           args:[address],
         },{
-          onSuccess: (data) => {
-          console.log(data);
-          },onError: (error) => {
+      onError: (error) => {
             console.log(error);
-            toast('Delegated failed 🤬 ! Try again later 😉');
+            toast('Tokens Delegation Transaction Failed 🤬 ! Try again later 😉');
           },
           'onSettled': (data) => {
             console.log(data);
-            toast('Delegated Tokens successfully 🎉 !');
+            toast('Tokens Delegation Transaction Created successfully 🎉 !');
           }
         });
       }}>Delegate Tokens !</Button>
@@ -234,10 +226,10 @@ return (
 
 </div>}
 
-{ writeContractError && <>
-  <p className='text-red-500'>{writeContractError.name}</p>
-  <p>{writeContractError.message}</p>
-  <Button onClick={() => console.log(writeContractError.cause)} className='hover:bg-red-500 cursor-pointer transition-all duration-500 mt-6 px-6 hover:text-zinc-800 '>
+{error && <>
+  <p className='text-red-500'>{error.name}</p>
+  <p>{error.message}</p>
+  <Button onClick={() => console.log(error.cause)} className='hover:bg-red-500 cursor-pointer transition-all duration-500 mt-6 px-6 hover:text-zinc-800 '>
     See the Cause
   </Button>
 </>}
