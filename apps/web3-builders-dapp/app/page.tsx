@@ -1,4 +1,4 @@
-import ProposalList from "@/components/home/ProposalList";
+import ProposalList from "@/components/home/proposal-list/ProposalListContainer";
 import ProposalModal from "@/components/home/ProposalModal";
 
 export default function Home() {

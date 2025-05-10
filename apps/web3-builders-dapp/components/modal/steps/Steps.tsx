@@ -198,7 +198,7 @@ callDataIndex===index && <div key={field.id}>
     <SelectItem className='text-white' value="rewardUser(address, uint256)">
       Reward User With Tokens
       </SelectItem>
-    <SelectItem className='text-white' value="punishUser(address, uint256)">Punish User Account</SelectItem>
+    <SelectItem className='text-white' value="punishMember(address, uint256)">Punish User Account</SelectItem>
   </SelectContent>
 </Select>
                 

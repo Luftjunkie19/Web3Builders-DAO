@@ -219,6 +219,10 @@ body {
 
 }
 
+a::-webkit-scrollbar, div::-webkit-scrollbar{
+  display: none;
+}
+
 p::-webkit-scrollbar, div::-webkit-scrollbar{
   display: none;
 }

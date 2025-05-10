@@ -221,10 +221,10 @@ function onSubmit(values: z.infer<typeof proposalObject>) {
    if (values.isCustom === 'custom' && values.customVotesOptions && values.customVotesOptions?.length > 0) {
   const voteOptionRows = values.customVotesOptions.map((item, index) => ({
     proposal_id: id,
-    calldata_indices: item.calldataIndicies,
+    calldata_indicies: item.calldataIndicies && item.calldataIndicies.map((index) => Number(index)),
     voteOptionIndex: index,
     isExecuting: item.calldataIndicies && item.calldataIndicies?.length > 0,
-    isDefeating: item.calldataIndicies && item.calldataIndicies?.length > 0,
+    isDefeating: item.calldataIndicies && item.calldataIndicies?.length === 0,
     voting_option_text: item.title,
   }));
 
