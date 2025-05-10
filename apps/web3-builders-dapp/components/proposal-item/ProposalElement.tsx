@@ -9,6 +9,7 @@ import ProposalCallbackItem from './ProposalCallbackItem';
 import { formatDistanceStrict } from 'date-fns';
 
 import { ethers } from 'ethers';
+import Image from 'next/image';
 
 type Props = {proposalId:`0x${string}`, proposalObj:any}
 
@@ -64,7 +65,7 @@ const {address}=useAccount();
       <div className="w-full border-b border-(--hacker-green-4)">
       <div className="flex justify-between items-center px-3 py-2">
       <div onClick={()=>console.log(proposalObj)} className="flex items-center gap-1 text-white">
-        <div className='w-8 h-8 bg-zinc-600 rounded-full'></div>
+       {proposalObj && proposalObj.dao_members.photoURL ? <Image width={32} height={32} className='w-full h-full ' src={proposalObj.dao_members.photoURL} alt="" /> : <div className='w-8 h-8 rounded-full bg-zinc-600'></div>}
         <p className='text-sm'>@{proposalObj.dao_members.nickname}</p>
       </div>
 
@@ -75,7 +76,7 @@ const {address}=useAccount();
     </div>
       </div>
       <Link href={`/proposal/${(fullProposalObject as any).id}`} className="w-full h-full oveflow-y-auto px-4 flex flex-col gap-3 py-2 text-white text-sm overflow-x-hidden">
-        <p>{(fullProposalObject as any).description} </p>
+        <p className=' font-bold text-base'>{(fullProposalObject as any).description} </p>
    
 {proposalObj && <p>{proposalObj.proposal_description}</p>}
      <div className="w-full flex flex-wrap gap-4 items-center">
@@ -86,8 +87,8 @@ const {address}=useAccount();
      </div>
       </Link>
       <div className="border-t border-(--hacker-green-4) py-3 flex justify-between items-center">
-        {!(fullProposalObject as any).isCustom &&
-<div className="flex items-center gap-8 px-1 overflow-x-auto">
+        {!(fullProposalObject as any).isCustom ?
+(<div className="flex items-center gap-8 px-1 overflow-x-auto">
 
 <div className="flex ml-3 gap-2 items-center">
 
@@ -140,6 +141,8 @@ const {address}=useAccount();
   </button>
 </div>
 
+</div>) : <div className="flex items-center gap-8 text-sm text-white px-3 overflow-x-auto">
+<p>This is a <span className='text-(--hacker-green-4)'>custom</span> proposal, click the proposal content to see options.</p>
 </div>
         }
       </div>

@@ -1,3 +1,4 @@
+'use client';
 import supabase from '@/lib/db/dbConfig';
 import React, { useEffect } from 'react'
 

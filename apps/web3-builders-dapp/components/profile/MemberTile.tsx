@@ -1,11 +1,11 @@
-'use client';
 
+import { formatDate } from 'date-fns'
 import React from 'react'
-import { useAccount } from 'wagmi';
-type Props = {}
+type Props = {
+objectData:any
+}
 
-function MemberTile({}: Props) {
-const account=useAccount();
+function MemberTile({objectData}: Props) {
   return (
     <div className='max-w-72 w-full bg-zinc-800 rounded-lg flex flex-col gap-3 border border-(--hacker-green-4)
      p-2 items-center
@@ -20,10 +20,10 @@ const account=useAccount();
      
         </div>
         <p className='text-white text-sm'>
-            @username
+            @{objectData.nickname}
         </p>
         <p className="text-gray-500 text-xs">
-            Joined May 2025
+            {formatDate(objectData.created_at, 'dd/MM/yyyy')}
         </p>
     </div>
   )

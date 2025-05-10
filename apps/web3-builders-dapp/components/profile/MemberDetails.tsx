@@ -6,9 +6,9 @@ import { CloudLightningIcon, CoinsIcon, FilePlus2Icon, LucideVote, SmartphoneCha
 import React from 'react'
 import { useAccount, useBlockNumber, useReadContract, useReadContracts } from 'wagmi';
 
-type Props = {}
+type Props = {objectData:any}
 
-function MemberDetails({}: Props) {
+function MemberDetails({objectData}: Props) {
 
     const {address}=useAccount();
 const tokenContractData =   {
@@ -32,10 +32,6 @@ const governorContractData= {
                 ...tokenContractData,
                 functionName:'totalSupply',
             
-              },{
-                ...governorContractData,
-                functionName:'userProposals',
-                args:[address]
               }
         ]
     })
@@ -137,7 +133,7 @@ text-(--hacker-green-4)
 text-3xl
 font-bold
 '>
-    <p onClick={()=>console.log(data?.[2].result)}>Clicked hahaha</p>
+    <p>{objectData && objectData.dao_proposals.length}</p>
 </span>
 
 
