@@ -4,26 +4,36 @@ import ProposalCallbackItem from '@/components/proposal-item/ProposalCallbackIte
 import ProposalCommentBar from '@/components/proposal/comment/ProposalCommentBar'
 import { Button } from '@/components/ui/button'
 import { useSidebar } from '@/components/ui/sidebar'
+import { GOVERNOR_CONTRACT_ADDRESS, governorContractAbi } from '@/contracts/governor/config';
 import useRealtimeDocument from '@/hooks/useRealtimeDocument';
 import useRealtimeDocuments from '@/hooks/useRealtimeDocuments';
 import { formatDistanceToNow } from 'date-fns';
 import React from 'react'
 import { FaCheck, FaFlag, FaPaperPlane } from 'react-icons/fa'
 import { MdCancel } from 'react-icons/md'
+import { useReadContract } from 'wagmi';
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from '../ui/dialog';
 
 type Props<T, U> = {
     proposalData: T,
-    commentsData:U[]
+    commentsData:U[],
+    proposalId: string
 }
 
 function ProposalContainer<T, U>({
-proposalData, commentsData
+proposalData, commentsData, proposalId
 }: Props<T, U>) {
 
     const {objectData:proposalObj}=useRealtimeDocument({'tableName':'dao_proposals', initialObj: proposalData});
 
     const {serverData}=useRealtimeDocuments({initialData:commentsData,tableName:'dao_voting_comments',parameterOnChanges:'proposal_id'});
 
+    const {data:proposalOnchainData, error}=useReadContract({
+      abi: governorContractAbi,
+      address: GOVERNOR_CONTRACT_ADDRESS,
+      functionName: "getProposal",
+      args:[proposalId],
+    });
 
     const {state, isMobile}=useSidebar();
   return (
@@ -59,10 +69,33 @@ proposalData, commentsData
     
     </div>
     
-    <div className="max-w-2xl mx-auto self-center w-full bg-zinc-800 h-12 rounded-lg flex items-center gap-5 overflow-y-hidden justify-between overflow-x-auto p-7">
+    <div onClick={()=>console.log(proposalOnchainData)} className={`max-w-2xl mx-auto self-center w-full bg-zinc-800 h-12 rounded-lg flex items-center gap-5 overflow-y-hidden ${proposalOnchainData && (proposalOnchainData as any) && (proposalOnchainData as any).isCustom ? 'justify-center' : 'justify-between'} overflow-x-auto p-7`}>
+      {proposalOnchainData && (proposalOnchainData as any) && (proposalOnchainData as any).isCustom ? <>
+     <Dialog>
+       <DialogTrigger>
+      <Button className='cursor-pointer transition-all hover:scale-95 hover:bg-(--hacker-green-5) hover:text-white bg-(--hacker-green-4) text-zinc-800'>See the options</Button>
+      </DialogTrigger>
+      <DialogContent className='bg-zinc-800 border-2 border-(--hacker-green-4) shadow-lg shadow-green-500'>
+        <DialogHeader>
+<DialogHeader className='text-white text-lg'>
+  Available Vote Options
+</DialogHeader>
+        </DialogHeader>
+
+<div className="flex flex-col gap-4">
+  {(proposalObj as any).dao_vote_options.map((item:any, index:number)=>(<Button className='cursor-pointer transition-all hover:scale-95 hover:bg-(--hacker-green-5) hover:text-white bg-(--hacker-green-4) text-zinc-800'>
+    {item.voting_option_text}
+  </Button>))}
+</div>
+
+      </DialogContent>
+     </Dialog>
+      
+      </> : <>
       <Button className='cursor-pointer transition-all hover:scale-95 hover:bg-(--hacker-green-5) hover:text-white bg-(--hacker-green-4) text-zinc-800'>Vote For <FaCheck /></Button>
       <Button className='cursor-pointer transition-all hover:scale-95 bg-blue-500 hover:bg-blue-400 hover:text-zinc-800'>Abstain <FaFlag /></Button>
       <Button className='cursor-pointer transition-all hover:scale-95 hover:bg-red-400 hover:text-zinc-800 bg-red-500'>Vote Against <MdCancel /></Button>
+      </> }
     </div>
     </div>
     
