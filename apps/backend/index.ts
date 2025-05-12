@@ -1,3 +1,5 @@
+import govTokenRouter from "./routes/GovTokenRouter";
+import governanceRouter from "./routes/GovernanceRouter";
 import { Request, Response } from "express";
 const fs = require('node:fs');
 const path = require('node:path');
@@ -6,6 +8,15 @@ const http = require('http');
 const express = require('express');
 const winston = require('winston');
 const app = express();
+
+app.get('/', (req:Request, res: Response) => {
+    res.send('Hello World!');
+})
+
+
+
+app.use('/governance',governanceRouter);
+app.use('/gov_token', govTokenRouter);
 const server = http.createServer(app);
 
 dotenv.config();
@@ -17,10 +28,6 @@ const logger = new winston.createLogger({
     transports: [
      new winston.transports.Console(),
     ]
-});
-
-app.get('/', (req:Request, res:Response) => {
-    res.send('Hello World!');
 });
 
 
