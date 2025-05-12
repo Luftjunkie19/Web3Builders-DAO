@@ -10,7 +10,7 @@ import { useAccount } from 'wagmi';
 
 type Props = {}
 
-function ProposalModal({}: Props) {
+function ProposalCard({}: Props) {
 
   const {address}=useAccount();
 
@@ -20,7 +20,7 @@ function ProposalModal({}: Props) {
     <div className="flex justify-between items-center px-3 py-2">
       <div className="flex items-center gap-1 text-white">
         <div className='w-8 h-8 bg-zinc-600 rounded-full'></div>
-        <p className='text-sm'>@username</p>
+        <p className='text-sm'>@{address ? address : 'Connect your wallet to see your username'}</p>
       </div>
 
       <p></p>
@@ -50,4 +50,4 @@ function ProposalModal({}: Props) {
   )
 }
 
-export default ProposalModal
+export default ProposalCard

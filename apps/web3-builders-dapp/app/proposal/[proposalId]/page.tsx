@@ -4,9 +4,9 @@ import supabase from "@/lib/db/dbConfig";
 async function ProposalPage({params}: {params: {proposalId: string}}) {
   const {proposalId}= await params;
 
-const {data}=await supabase.from('dao_proposals').select('*, dao_members!inner(*), dao_vote_options!inner(*), calldata_objects!inner(*)').eq('proposal_id', proposalId).single();
+const {data}=await supabase.from('dao_proposals').select('*, dao_members:dao_members(*), dao_vote_options:dao_vote_options(*), calldata_objects:calldata_objects(*)').eq('proposal_id', proposalId).single();
   
-const {data:commentsData}=await supabase.from('dao_voting_comments').select('*, dao_members!inner(*)').eq('proposal_id', proposalId);
+const {data:commentsData}=await supabase.from('dao_voting_comments').select('*, dao_vote_options:dao_vote_options(*)').eq('proposal_id', proposalId);
 
   return (
     <div className='w-full h-full'>

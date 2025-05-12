@@ -1,7 +1,7 @@
 'use client';
 
 import { GOVERNOR_CONTRACT_ADDRESS, governorContractAbi } from '@/contracts/governor/config';
-import { Check, CircleArrowUp, InfoIcon, X } from 'lucide-react';
+import { Check, CircleArrowUp, InfoIcon, LucideBatteryFull, LucideBatteryLow, LucideBatteryMedium, X } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react'
 import { useReadContract, useWriteContract, useAccount } from 'wagmi';
@@ -145,6 +145,13 @@ const {address}=useAccount();
 <p>This is a <span className='text-(--hacker-green-4)'>custom</span> proposal, click the proposal content to see options.</p>
 </div>
         }
+
+        <div className="flex gap-2 pr-4 items-center">
+         <p className='text-sm flex items-center gap-1 text-white'>
+Urgency:
+           {fullProposalObject && (fullProposalObject as any).urgencyLevel === 0 ? <LucideBatteryLow className=' text-red-500' /> : (fullProposalObject as any).urgencyLevel === 1 ? <LucideBatteryMedium className=' text-yellow-400' />  : <LucideBatteryFull className='text-(--hacker-green-4)' />}
+         </p>
+        </div>
       </div>
     </div>}
 </>);
