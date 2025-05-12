@@ -12,6 +12,7 @@
     "dev": "nodemon index.ts"
   },
   "dependencies": {
+    "@web3-builders/supabase":"*",
     "@discordjs/brokers": "^1.0.0",
     "@discordjs/collection": "^1.5.3",
     "@discordjs/core": "^2.1.0",

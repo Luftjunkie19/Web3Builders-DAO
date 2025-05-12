@@ -1,0 +1,27 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.ts",
+    "dev": "nodemon index.ts"
+  },
+  "dependencies": {
+    "@discordjs/brokers": "^1.0.0",
+    "@discordjs/collection": "^1.5.3",
+    "@discordjs/core": "^2.1.0",
+    "@discordjs/proxy": "^2.1.1",
+    "@discordjs/util": "^1.1.1",
+    "@discordjs/voice": "^0.18.0",
+    "@discordjs/ws": "^1.2.2",
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.5.0",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2"
+  }
+}

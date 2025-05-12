@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { task } from "./cron-jobs";
 const fs = require('node:fs');
 const path = require('node:path');
 const dotenv = require('dotenv');
@@ -25,7 +24,7 @@ app.get('/', (req:Request, res:Response) => {
 });
 
 
-task.start();
+
 
 server.listen(2137, () => {
  logger.info('Server is running on port 2137');
