@@ -172,7 +172,6 @@ mapping(bytes32 => mapping(address => Vote)) public proposalVotes; // proposalId
 mapping(bytes32 => address[]) public proposalVoters;
 mapping(address => Vote[]) public userVotes; // user address to proposalId to vote
 mapping(address=> Proposal[]) public userProposals; // user address to proposalId to vote
-ProposalArrayItem[] public allProposals;
 
 modifier isVotingActive(bytes32 proposalId){
 
@@ -301,10 +300,6 @@ indicies= customCalldataIndices;
 isCustomExecutable = isExecutable;
 }
 
-function getAllProposals () public view returns (ProposalArrayItem[] memory) {
-    return allProposals;
-}
-
 function getAllUserVotes(address user) public view returns (Vote[] memory) {
     return userVotes[user];
 }
@@ -409,7 +404,6 @@ function getProposalQuorumNeeded(bytes32 proposalId) public view returns (uint25
         proposals[proposalId] = proposal;
       userProposals[msg.sender].push(proposal);
      
-     allProposals.push(ProposalArrayItem(proposalId, proposalCount));
 
       proposalCount++;
      emit ProposalCreated(proposalId, msg.sender);
