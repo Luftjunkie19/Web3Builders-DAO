@@ -6,14 +6,13 @@ import { Button } from '../ui/button'
 import { Calendar, EllipsisIcon } from 'lucide-react'
 import { toast } from 'sonner';
 import { useAccount } from 'wagmi';
-import useGetLoggedInUser from '@/hooks/useGetLoggedInUser';
 
 
 type Props = {}
 
 function ProposalCard({}: Props) {
 
-  const {currentUser}=useGetLoggedInUser();
+  const {address}=useAccount();
 
   return (
     <>
@@ -21,7 +20,7 @@ function ProposalCard({}: Props) {
     <div className="flex justify-between items-center px-3 py-2">
       <div className="flex items-center gap-1 text-white">
         <div className='w-8 h-8 bg-zinc-600 rounded-full'></div>
-        <p onClick={()=>console.log(currentUser)} className='text-sm'>@{currentUser ? currentUser.nickname : 'Connect your wallet to see your username'}</p>
+        <p className='text-sm'>@{address ? address : 'Connect your wallet to see your username'}</p>
       </div>
 
       <p></p>
@@ -40,10 +39,10 @@ function ProposalCard({}: Props) {
 </button>
       </div>
       <Button onClick={()=>{
-        if(!currentUser){
+        if(!address){
           toast.error('Please connect your wallet !');
         }
-      }} className='hover:bg-(--hacker-green-4) hover:scale-95 cursor-pointer transition-all duration-500  px-6 hover:text-zinc-800 mr-4'>Propose</Button>
+      }} className='hover:bg-(--hacker-green-4) cursor-pointer transition-all duration-500  px-6 hover:text-zinc-800 mr-4'>Propose</Button>
     </div>
     </div>
 
