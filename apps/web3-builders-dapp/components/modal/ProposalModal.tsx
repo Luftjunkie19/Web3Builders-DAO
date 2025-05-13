@@ -183,7 +183,7 @@ function onSubmit(values: z.infer<typeof proposalObject>) {
             proposal_description: values['longDescription'],
             proposal_title: values['title'],
             isCustom: values['isCustom'] === 'custom' ? true : false,
-            proposal_delay: Number(values['proposalDelay']),
+            proposal_delay: Math.floor(Number(values['proposalDelay']) * Number(values['proposalDelayUnit'])).toFixed(0),
             expires_at: new Date(Number(values['proposalEndTime'])),
             
           }]);

@@ -1,21 +1,24 @@
 import { Request, Response } from "express";
 
 import dotenv from "dotenv";
-import { daoContract, proposalStates } from "../config/ethers.config";
+import { daoContract, proposalStates, provider } from "../config/ethers.config";
+import { supabaseConfig } from "../config/supabase";
 
 dotenv.config();
 
-const activateProposal = async (req: Request, res: Response) => {
+const activateProposals = async (req: Request, res: Response) => {
     try{
-        const {proposalId} = req.params;
-    
-        const tx = await daoContract.activateProposal(proposalId);
+        
+     const lastBlock = await provider.getBlockNumber();
+     const filters = daoContract.filters.ProposalCreated();
 
-        console.log(tx);
+     const events = await daoContract.queryFilter(filters, lastBlock - 499, lastBlock);
 
-        const txReceipt = await tx.wait();
+     console.log(filters, "Filters");
 
-        res.send({message:"success", status:200, data:txReceipt});
+     console.log(events, "Events");
+
+     res.send({message:"success", status:200, data:events, error:null});
     }
     catch(error){
         console.log(error);
@@ -23,17 +26,17 @@ const activateProposal = async (req: Request, res: Response) => {
     }
 }
 
-const queueProposal = async (req: Request, res: Response) => {
+const queueProposals = async (req: Request, res: Response) => {
 try{
-                const {proposalId} = req.params;
-            
-                const tx = await daoContract.queueProposal(proposalId);
+                
+                // const tx = await daoContract.queueProposal(proposalId);
     
-                console.log(tx);
+                // console.log(tx);
     
-                const txReceipt = await tx.wait();
+                // const txReceipt = await tx.wait();
     
-                res.send({message:"success", status:200, data:txReceipt, error:null});
+                // res.send({message:"success", status:200, data:txReceipt, error:null});    
+        
 
             }
     catch(error){
@@ -41,34 +44,34 @@ try{
     }
 }
 
-const cancelProposal = async (req: Request, res: Response) => {
+const cancelProposals = async (req: Request, res: Response) => {
         try{
-                const {proposalId} = req.params;
+
             
-                const tx = await daoContract.cancelProposal(proposalId);
+                // const tx = await daoContract.cancelProposal(proposalId);
     
-                console.log(tx);
+                // console.log(tx);
     
-                const txReceipt = await tx.wait();
+                // const txReceipt = await tx.wait();
     
-                res.send({message:"success", status:200, data:txReceipt, error:null});
+                // res.send({message:"success", status:200, data:txReceipt, error:null});
         }
     catch(error){
         res.send({message:"error", status:500, data:null, error});
     }
 }
 
-const executeProposal = async (req: Request, res: Response) => {
+const executeProposals = async (req: Request, res: Response) => {
         try{
-            const {proposalId} = req.params;
+ 
 
-    const tx = await daoContract.executeProposal(proposalId);
+    // const tx = await daoContract.executeProposal(proposalId);
     
-    console.log(tx);
+    // console.log(tx);
     
-    const txReceipt = await tx.wait();
+    // const txReceipt = await tx.wait();
     
-    res.send({message:"success", status:200, data:txReceipt, error:null});
+    // res.send({message:"success", status:200, data:txReceipt, error:null});
         }
     catch(error){
         res.send({message:"error", status:500, data:null, error});
@@ -84,7 +87,7 @@ const getProposalVotes = async (req: Request, res: Response) => {
                 res.send({message:"success", status:200, data:votes, error:null});
             }else{
                 const standardVotes = await daoContract.getStandardProposalVotes(proposalId);
-                res.send({message:"success", status:200, data:standardVotes, error:null});
+                res.send({message:"success", status:200, tokenAmount:standardVotes, error:null});
             }
         }
     catch(error){
@@ -99,7 +102,7 @@ const getProposalState = async (req: Request, res: Response) => {
             
             const stateName=proposalStates[state];
 
-            res.send({message:"success", status:200, data:stateName, error:null});
+            res.send({message:"success", status:200, data:`The proposal (${proposalId}) is ${stateName}`, error:null});
         }
     catch(error){
         res.send({message:"error", status:500, data:null, error});
@@ -129,10 +132,10 @@ const getProposalDetails = async (req: Request, res: Response) => {
 }
 
 export {
-    activateProposal,
-    queueProposal,
-    cancelProposal,
-    executeProposal,
+    activateProposals,
+    queueProposals,
+    cancelProposals,
+    executeProposals,
     getProposalVotes,
     getProposalState,
     getProposalDetails,

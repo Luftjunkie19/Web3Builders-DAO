@@ -1,16 +1,16 @@
 import { Router } from "express";
-import { activateProposal, cancelProposal, executeProposal, getProposalDetails, getProposalQuorum, getProposalState, getProposalVotes, queueProposal } from "../controllers/GovernanceController";
+import { activateProposals, cancelProposals, executeProposals, getProposalDetails, getProposalQuorum, getProposalState, getProposalVotes, queueProposals } from "../controllers/GovernanceController";
 
 const governanceRouter = Router();
 
 
-governanceRouter.post('/activate_proposal/:proposalId', activateProposal);
+governanceRouter.get('/activate_proposals', activateProposals);
 
-governanceRouter.post('/queue_proposal/:proposalId', queueProposal);
+governanceRouter.get('/queue_proposals', queueProposals);
 
-governanceRouter.post('/cancel_proposal/:proposalId', cancelProposal);
+governanceRouter.get('/cancel_proposals', cancelProposals);
 
-governanceRouter.post('/execute_proposal/:proposalId', executeProposal);
+governanceRouter.get('/execute_proposals', executeProposals);
 
 governanceRouter.get('/get_proposal_votes/:proposalId', getProposalVotes);
 

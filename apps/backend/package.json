@@ -20,6 +20,7 @@
     "@discordjs/voice": "^0.18.0",
     "@discordjs/ws": "^1.2.2",
     "@web3-builders/supabase": "*",
+    "cors": "^2.8.5",
     "cron": "^4.3.0",
     "discord.js": "^14.18.0",
     "dotenv": "^16.5.0",

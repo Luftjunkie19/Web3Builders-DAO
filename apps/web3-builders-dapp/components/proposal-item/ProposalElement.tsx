@@ -64,6 +64,9 @@ const {address}=useAccount();
 
         const totalTokens = allOptionsVote.reduce((accumulator, currentValue) => Number(accumulator) + Number(currentValue), 0);
         const percentage = (amountOfTokens / totalTokens) * 100;
+        if(isNaN(percentage)){
+            return 0;
+        }
         return percentage;
     }
 
@@ -99,10 +102,9 @@ const {address}=useAccount();
         {!(fullProposalObject as any).isCustom ?
 (<div className="flex items-center gap-8 px-1 overflow-x-auto">
 
-<div onClick={()=>console.log(proposalVotes as any[] && Number((proposalVotes as any[])[0]) / 1e18)} className="flex ml-3 gap-2 items-center">
-
+<div  className="flex ml-3 gap-2 items-center">
 <div className='w-8 h-8 bg-(--hacker-green-4) rounded-full flex justify-center items-center'>
-  <span className='text-xs text-zinc-800'>{proposalVotes as BigInt[] && convertAmountOfTokensToPercent(Number((proposalVotes as BigInt[])[0])) }%</span>
+  <span className='text-xs text-zinc-800'>{proposalVotes as BigInt[] && convertAmountOfTokensToPercent(Number((proposalVotes as BigInt[])[0]))}%</span>
 </div>
 
 <button onClick={()=>{
