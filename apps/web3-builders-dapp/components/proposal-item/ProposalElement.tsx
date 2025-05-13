@@ -57,6 +57,15 @@ const {address}=useAccount();
         })
     }
 
+    const convertAmountOfTokensToPercent = (amountOfTokens: number) => {
+
+
+   const allOptionsVote=proposalVotes as BigInt[];
+
+        const totalTokens = allOptionsVote.reduce((accumulator, currentValue) => Number(accumulator) + Number(currentValue), 0);
+        const percentage = (amountOfTokens / totalTokens) * 100;
+        return percentage;
+    }
 
 
   return (
@@ -92,8 +101,8 @@ const {address}=useAccount();
 
 <div onClick={()=>console.log(proposalVotes as any[] && Number((proposalVotes as any[])[0]) / 1e18)} className="flex ml-3 gap-2 items-center">
 
-<div className='w-7 h-7 bg-(--hacker-green-4) rounded-full flex justify-center items-center'>
-  <span className='text-xs text-zinc-800'>{proposalVotes as any[] && Math.floor(Number((proposalVotes as any[])[0])/ 1e18).toFixed(0) }</span>
+<div className='w-8 h-8 bg-(--hacker-green-4) rounded-full flex justify-center items-center'>
+  <span className='text-xs text-zinc-800'>{proposalVotes as BigInt[] && convertAmountOfTokensToPercent(Number((proposalVotes as BigInt[])[0])) }%</span>
 </div>
 
 <button onClick={()=>{
@@ -108,8 +117,8 @@ const {address}=useAccount();
 </div>
 
 <div className="flex gap-1 items-center">
-<div className='w-7 h-7 bg-red-500 rounded-full flex justify-center items-center'>
-  <span className='text-xs text-white'>{proposalVotes && (proposalVotes as any[])[1]}</span>
+<div className='w-8 h-8 bg-red-500 rounded-full flex justify-center items-center'>
+  <span className='text-xs text-white'>{proposalVotes as BigInt[] && convertAmountOfTokensToPercent(Number((proposalVotes as BigInt[])[1]))}%</span>
 </div>
 
 
@@ -127,8 +136,8 @@ const {address}=useAccount();
 </div>
 
 <div className="flex gap-2 items-center">
-<div className='w-7 h-7  bg-blue-500 rounded-full overflow-hidden flex justify-center items-center'>
-  <span className='text-xs text-white'>{proposalVotes && (proposalVotes as any[])[2]}</span>
+<div className='w-8 h-8  bg-blue-500 rounded-full overflow-hidden flex justify-center items-center'>
+  <span className='text-xs text-white'>{proposalVotes as BigInt[] && convertAmountOfTokensToPercent(Number((proposalVotes as BigInt[])[2]))}%</span>
 </div>
 
 
