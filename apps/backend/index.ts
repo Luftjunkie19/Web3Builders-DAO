@@ -1,3 +1,6 @@
+import { logger } from "./config/logger";
+import {  executeGovenorTokenEvents } from "./event-listeners/GovTokenEventListener";
+import { executeGovenorContractEvents } from "./event-listeners/GovenorEventListener";
 import govTokenRouter from "./routes/GovTokenRouter";
 import governanceRouter from "./routes/GovernanceRouter";
 import { Request, Response } from "express";
@@ -6,7 +9,6 @@ const path = require('node:path');
 const dotenv = require('dotenv');
 const http = require('http');
 const express = require('express');
-const winston = require('winston');
 const app = express();
 
 app.get('/', (req:Request, res: Response) => {
@@ -21,17 +23,13 @@ const server = http.createServer(app);
 
 dotenv.config();
 
-const logger = new winston.createLogger({
-    level: 'info',
-    format: winston.format.combine(winston.format.json(), winston.format.timestamp()),
-    defaultMeta: { service: 'user-service' },
-    transports: [
-     new winston.transports.Console(),
-    ]
-});
 
 
 
 server.listen(2137, () => {
+
+executeGovenorTokenEvents();
+executeGovenorContractEvents();
+
  logger.info('Server is running on port 2137');
 });

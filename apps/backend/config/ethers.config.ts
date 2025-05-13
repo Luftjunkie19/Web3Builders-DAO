@@ -19,3 +19,6 @@ export const governorContractInterface =new ethers.Interface(governorContractAbi
 export const daoContract = new Contract(GOVERNOR_CONTRACT_ADDRESS as `0x${string}`, governorContractInterface, wallet);
 
 export const governorTokenContract = new Contract(TOKEN_CONTRACT_ADDRESS as `0x${string}`, tokenContractAbi, wallet);
+
+
+export const proposalStates: ["Pending", "Active", "Canceled", "Defeated", "Succeeded", "Queued", "Executed"] = ["Pending", "Active", "Canceled", "Defeated", "Succeeded", "Queued", "Executed"];
