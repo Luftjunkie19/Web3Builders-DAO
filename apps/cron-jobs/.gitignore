@@ -16,7 +16,7 @@ node_modules
 coverage
 
 
-.discordConfig.json
+discordConfig.json
 
 # Turbo
 .turbo
