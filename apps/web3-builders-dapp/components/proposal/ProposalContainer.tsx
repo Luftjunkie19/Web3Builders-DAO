@@ -11,8 +11,9 @@ import { formatDistanceToNow } from 'date-fns';
 import React from 'react'
 import { FaCheck, FaFlag, FaPaperPlane } from 'react-icons/fa'
 import { MdCancel } from 'react-icons/md'
-import { useReadContract } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { Dialog, DialogContent, DialogHeader, DialogTrigger } from '../ui/dialog';
+import { ethers } from 'ethers';
 
 type Props<T, U> = {
     proposalData: T,
@@ -27,6 +28,10 @@ proposalData, commentsData, proposalId
     const {objectData:proposalObj}=useRealtimeDocument({'tableName':'dao_proposals', initialObj: proposalData});
 
     const {serverData}=useRealtimeDocuments({initialData:commentsData,tableName:'dao_voting_comments',parameterOnChanges:'proposal_id'});
+const {address}=useAccount();
+const {writeContract}=useWriteContract({
+  
+})
 
     const {data:proposalOnchainData, error}=useReadContract({
       abi: governorContractAbi,
@@ -92,9 +97,30 @@ proposalData, commentsData, proposalId
      </Dialog>
       
       </> : <>
-      <Button className='cursor-pointer transition-all hover:scale-95 hover:bg-(--hacker-green-5) hover:text-white bg-(--hacker-green-4) text-zinc-800'>Vote For <FaCheck /></Button>
-      <Button className='cursor-pointer transition-all hover:scale-95 bg-blue-500 hover:bg-blue-400 hover:text-zinc-800'>Abstain <FaFlag /></Button>
-      <Button className='cursor-pointer transition-all hover:scale-95 hover:bg-red-400 hover:text-zinc-800 bg-red-500'>Vote Against <MdCancel /></Button>
+      <Button onClick={()=>{
+        writeContract({
+          abi: governorContractAbi,
+          address: GOVERNOR_CONTRACT_ADDRESS,
+          functionName: "castVote",
+          args:[(proposalObj as any).proposal_id, "", address, 0, ethers.encodeBytes32String(""), (proposalObj as any).isCustom, true, false, []],
+        })
+      }} className='cursor-pointer transition-all hover:scale-95 hover:bg-(--hacker-green-5) hover:text-white bg-(--hacker-green-4) text-zinc-800'>Vote For <FaCheck /></Button>
+      <Button onClick={()=>{
+        writeContract({
+          abi: governorContractAbi,
+          address: GOVERNOR_CONTRACT_ADDRESS,
+          functionName: "castVote",
+          args:[(proposalObj as any).proposal_id, "", address, 1, ethers.encodeBytes32String(""), (proposalObj as any).isCustom, true, false, []],
+        })
+      }} className='cursor-pointer transition-all hover:scale-95 bg-blue-500 hover:bg-blue-400 hover:text-zinc-800'>Abstain <FaFlag /></Button>
+      <Button onClick={()=>{
+        writeContract({
+          abi: governorContractAbi,
+          address: GOVERNOR_CONTRACT_ADDRESS,
+          functionName: "castVote",
+          args:[(proposalObj as any).proposal_id, "", address, 2, ethers.encodeBytes32String(""), (proposalObj as any).isCustom, true, false, []],
+        })
+      }} className='cursor-pointer transition-all hover:scale-95 hover:bg-red-400 hover:text-zinc-800 bg-red-500'>Vote Against <MdCancel /></Button>
       </> }
     </div>
     </div>

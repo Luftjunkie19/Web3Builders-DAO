@@ -1,18 +1,57 @@
 import { Request, Response } from "express";
 
-const activateProposal = async (req: Request, res: Response) => {}
+import dotenv from "dotenv";
+import { daoContract } from "../config/ethers.config";
 
-const queueProposal = async (req: Request, res: Response) => {}
+dotenv.config();
 
-const cancelProposal = async (req: Request, res: Response) => {}
+const activateProposal = async (req: Request, res: Response) => {
+    try{
+        const {proposalId} = req.params;
+    
+        const tx = await daoContract.activateProposal(proposalId);
 
-const executeProposal = async (req: Request, res: Response) => {}
+        console.log(tx);
 
-const getProposalVotes = async (req: Request, res: Response) => {}
+        const txReceipt = await tx.wait();
 
-const getProposalState = async (req: Request, res: Response) => {}
+        res.send({message:"success", status:200, data:txReceipt});
+    }
+    catch(error){
+        console.log(error);
+          res.send({message:"error", status:500, data:null, error});
+    }
+}
 
-const getProposalQuorum = async (req: Request, res: Response) => {}
+const queueProposal = async (req: Request, res: Response) => {
+        try{}
+    catch(error){}
+}
+
+const cancelProposal = async (req: Request, res: Response) => {
+        try{}
+    catch(error){}
+}
+
+const executeProposal = async (req: Request, res: Response) => {
+        try{}
+    catch(error){}
+}
+
+const getProposalVotes = async (req: Request, res: Response) => {
+        try{}
+    catch(error){}
+}
+
+const getProposalState = async (req: Request, res: Response) => {
+        try{}
+    catch(error){}
+}
+
+const getProposalQuorum = async (req: Request, res: Response) => {
+        try{}
+    catch(error){}
+}
 
 
 export {
