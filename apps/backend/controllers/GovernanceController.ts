@@ -3,7 +3,13 @@ import { Request, Response } from "express";
 import dotenv from "dotenv";
 import { daoContract, proposalStates, provider } from "../config/ethers.config";
 import { supabaseConfig } from "../config/supabase";
-import { Log, EventLog } from "ethers";
+import { EventLog } from "ethers";
+
+
+export interface ProposalEventArgs extends Omit<EventLog, 'args'> {
+    args: string[]
+}
+
 
 dotenv.config();
 
@@ -13,30 +19,26 @@ const activateProposals = async (req: Request, res: Response) => {
      const lastBlock = await provider.getBlockNumber();
      const filters = daoContract.filters.ProposalCreated();
 
-     const events = await daoContract.queryFilter(filters, lastBlock - 499, lastBlock);
+     const events = await daoContract.queryFilter(filters, -499);
 
-     console.log(events);
+events.map( async (event, index) => {
+   try{
+     const proposal= await daoContract.getProposal((event as ProposalEventArgs).args[0]);
 
-     events.filter(async (event:Log | EventLog) => {
-        const state = await daoContract.getProposalState(event.data);
-        
-       return state === 0;
-     }).map(async (event:Log | EventLog) => {
-        console.log(event.address);
-         const tx = await daoContract.activateProposal(event.data);
-    
-            console.log(tx);
-    
-            const txReceipt = await tx.wait();
-    
-           console.log(txReceipt);
-    
-            res.send({message:"success", status:200, data:txReceipt, error:null});
-     })
+    if(new Date(Number(Number(proposal[3]) * 1000) + Number(proposal[17])).getTime() <= new Date().getTime() && proposal.state === 5){
+        const tx = await daoContract.activateProposal((event as ProposalEventArgs).args[0]);
+        console.log(tx);
 
-     console.log(filters, "Filters");
+        const txReceipt = await tx.wait();
 
-     console.log(events, "Events");
+        res.send({message:"success", status:200, data:txReceipt, error:null});
+    }
+   }catch(err){
+       console.log(err);
+       res.send({message:"error", status:500, data:null, error:err});
+   }
+
+});
 
      res.send({message:"success", status:200, data:events, error:null});
     }
@@ -54,19 +56,24 @@ const finishProposals= async (req: Request, res: Response) => {
 
      const events = await daoContract.queryFilter(filters, lastBlock - 499, lastBlock);
 
-     events.filter(async (event:Log | EventLog) => {
-        const proposal = await daoContract.getProposal(event.data);
-        
-       return proposal.state === 1;
-     }).map(async (event:Log | EventLog) => {
-         const tx = await daoContract.finishProposal(event.data);
-    
+     console.log(events);
+
+
+
+
+     events.map(async (event) => {
+        const proposal = await daoContract.getProposal((event as ProposalEventArgs).args[0]);
+        console.log(proposal);
+        if(proposal[6] === 1 && new Date(Number(proposal[4]) * 1000).getTime() <= new Date().getTime()){
+            const tx = await daoContract.finishProposal((event as ProposalEventArgs).args[0]);
             console.log(tx);
     
             const txReceipt = await tx.wait();
     
             res.send({message:"success", status:200, data:txReceipt, error:null});
-     });
+        }
+    });
+    res.json({data:events, error:null, message:"success", status:200});
 
     }
      catch(err){
@@ -81,19 +88,21 @@ try{
 
      const events = await daoContract.queryFilter(filters, lastBlock - 499, lastBlock);
 
-     events.filter(async (event:Log | EventLog) => {
-        const proposal = await daoContract.getProposal(event.data);
+     res.json({data:events, error:null, message:"success", status:200});
+
+    //  events.filter(async (event:Log | EventLog) => {
+    //     const proposal = await daoContract.getProposal(event.data);
         
-       return proposal.state === 4;
-     }).map(async (event:Log | EventLog) => {
-         const tx = await daoContract.activateProposal(event.data);
+    //    return proposal.state === 4;
+    //  }).map(async (event:Log | EventLog) => {
+    //      const tx = await daoContract.activateProposal(event.data);
     
-            console.log(tx);
+    //         console.log(tx);
     
-            const txReceipt = await tx.wait();
+    //         const txReceipt = await tx.wait();
     
-            res.send({message:"success", status:200, data:txReceipt, error:null});
-     });
+    //         res.send({message:"success", status:200, data:txReceipt, error:null});
+    //  });
 
             }
     catch(error){

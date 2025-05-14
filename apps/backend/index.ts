@@ -38,8 +38,8 @@ const server = http.createServer(app);
 
 server.listen(2137, () => {
 
+    executeGovenorContractEvents();
 executeGovenorTokenEvents();
-executeGovenorContractEvents();
 
  logger.info('Server is running on port 2137');
 });
