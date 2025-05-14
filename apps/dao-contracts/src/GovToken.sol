@@ -162,7 +162,6 @@
 
     // Public functions (User-Interactive)
   function handInUserInitialTokens(TokenReceiveLevel _psrLevel, TokenReceiveLevel _jexsLevel, TechnologyKnowledgeLevel _tklLevel, TokenReceiveLevel _web3IntrestLevel, KnowledgeVerificationTestRate _kvtrLevel, bool isAdmin) public  {
-
       if (receivedInitialTokens[msg.sender] == true) {
       punishMember(msg.sender, initial_token_user_amount / 10);
       emit UserPunished(msg.sender, initial_token_user_amount / 10);

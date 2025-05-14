@@ -498,6 +498,64 @@ const goForward=useCallback(() => {
 </div>
 
 
+<div className="flex items-center gap-3">
+<FormField
+          control={control}
+          name={`timelockPeriod`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-white text-base font-light'>Proposal Timelock</FormLabel>
+              <FormControl>
+
+       <div className="flex w-full gap-3 items-center">
+    <Input {...field} id='customOptionName' value={Number(field.value)} onChange={(e) => setValue('timelockPeriod', Number(e.target.value))} placeholder='Amount of time units' type='number'
+    className='text-white border border-(--hacker-green-4) max-w-64 w-full outline-none '/>
+      
+    </div>
+
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+
+<FormField
+          control={control}
+          name={`timelockUnit`}
+          render={({ field }) => (
+            <FormItem>
+ <FormLabel className='text-white text-base font-light'>Timelock Units</FormLabel>
+              <FormControl>
+       <Select {...field} value={String(field.value)} onValueChange={(value) => setValue('timelockUnit', Number(value))}>
+  <SelectTrigger className="w-full max-w-32 text-white border border-(--hacker-green-4)">
+    <SelectValue placeholder="Time Unit" />
+  </SelectTrigger>
+  <SelectContent className='bg-zinc-800 border flex  border-(--hacker-green-4)'>
+    <SelectItem className='text-white' value={'1'}>
+      Seconds
+      </SelectItem>
+      <SelectItem className='text-white' value={'60'}>
+      Minutes
+      </SelectItem>
+      <SelectItem className='text-white' value={'3600'}>
+      Hours
+      </SelectItem>
+
+      <SelectItem className='text-white' value={'86400'}>
+      Days
+      </SelectItem>
+  </SelectContent>
+</Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+
+</div>
+
 
 
     </div>

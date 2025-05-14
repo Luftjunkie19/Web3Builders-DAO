@@ -135,28 +135,24 @@ function testStandardProposalWorkflowWorksOk() public {
 
 uint256 proposalsAmountBeforeProposal = customGovernor.proposalCount();
 
-
 proposalCreatedTargets = [user2];
 proposalCreatedValues = [0];
 proposalCreatedCalldata=[abi.encodeWithSignature("rewardUser(address,uint256)", user2, 15e18)];
 indicies.push(0);
 
 vm.startPrank(user2);
-bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, false, 2400, block.timestamp + 604800); 
+bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, false, block.timestamp + 604800, 1000, 3000);
 
 govToken.delegate(user2);
 vm.stopPrank();
 
 CustomBuilderGovernor.Proposal memory wannaCastVoteFailProposal = customGovernor.getProposal(proposalId);
 
+
+vm.startPrank(user2);
 vm.expectRevert(CustomBuilderGovernor.VotingNotStarted.selector);
-
-vm.prank(user2);
-
-
-
 customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 0, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
-
+vm.stopPrank();
 
 uint256 proposalsAmountAfterProposal = customGovernor.proposalCount();
 
@@ -173,33 +169,37 @@ customGovernor.activateProposal(proposalId);
 
 CustomBuilderGovernor.Proposal memory proposalAfterFailed = customGovernor.getProposal(proposalId);
 
-vm.warp(block.timestamp + proposalAfterFailed.votingDelay + 2);
+vm.expectRevert(CustomBuilderGovernor.InvalidProposalState.selector);
+
+customGovernor.queueProposal(proposalId);
+
+
+vm.warp(proposalAfterFailed.startBlockTimestamp + 200);
 
 customGovernor.activateProposal(proposalId);
-
 
 CustomBuilderGovernor.Proposal memory proposalAfterSuccess = customGovernor.getProposal(proposalId);
 
 assert(proposalAfterSuccess.state == CustomBuilderGovernor.ProposalState.Active);
 
-
 vm.prank(user2);
 customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 0, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
-
 
 (uint256 yesVotes, uint256 noVotes, uint256 abstainVotes) = customGovernor.getStandardProposalVotes(proposalId);
 
 console.log(yesVotes, noVotes, abstainVotes);
 
+vm.warp(proposalAfterSuccess.endBlockTimestamp + 5);
 
-vm.warp(block.timestamp + proposalAfterSuccess.endBlockTimestamp + 100);
+customGovernor.succeedProposal(proposalId);
+
+vm.warp(proposalAfterSuccess.succeededAt + 5);
 customGovernor.queueProposal(proposalId);
 
 CustomBuilderGovernor.Proposal memory proposalAfterQueued = customGovernor.getProposal(proposalId);
 
-vm.warp(block.timestamp + proposalAfterQueued.endBlockTimestamp + 1);
 
-
+vm.warp(proposalAfterQueued.queuedAt + proposalAfterQueued.timelock + 5);
 customGovernor.executeProposal(proposalId);
 
 CustomBuilderGovernor.Proposal memory proposalAfterExecuted = customGovernor.getProposal(proposalId);
@@ -245,14 +245,13 @@ function testCustomProposalWorkflowWorksOk() public {
 
 console.log(balanceOfProposer);
 
-uint256 proposalsAmountBeforeProposal = customGovernor.proposalCount();
 
 
 vm.startPrank(user2);
 proposalCreatedTargets = [address(govToken), address(govToken)];
 proposalCreatedValues = [0, 0];
 proposalCreatedCalldata=[abi.encodeWithSignature("punishMember(address,uint256)", user2, 15e18), abi.encodeWithSignature("rewardUser(address,uint256)", user2, 20)];
-bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, true, 2400, block.timestamp + 604800); 
+bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, true, block.timestamp + 604800, 1000, 3000);
 
 govToken.delegate(user2);
 vm.stopPrank();
@@ -267,24 +266,9 @@ vm.expectRevert(CustomBuilderGovernor.VotingNotStarted.selector);
 vm.prank(user2);
 customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 3, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
 
-
-uint256 proposalsAmountAfterProposal = customGovernor.proposalCount();
-
-assert(proposalsAmountAfterProposal > proposalsAmountBeforeProposal);
-
-CustomBuilderGovernor.Proposal memory proposal = customGovernor.getProposal(proposalId);
-
-console.log(uint8(proposal.state),  'Proposal State');
-
-assert(proposal.state == CustomBuilderGovernor.ProposalState.Pending);
-
-vm.expectRevert(CustomBuilderGovernor.NotReadyToStart.selector);
-
-customGovernor.activateProposal(proposalId);
-
 CustomBuilderGovernor.Proposal memory proposalAfterFailed = customGovernor.getProposal(proposalId);
 
-vm.warp(block.timestamp + proposalAfterFailed.votingDelay + 2);
+vm.warp(proposalAfterFailed.startBlockTimestamp + 5);
 
 customGovernor.activateProposal(proposalId);
 
@@ -313,23 +297,16 @@ customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 3, "0xx
 vm.stopPrank();
 
 
-vm.warp(block.timestamp + proposalAfterSuccess.endBlockTimestamp + 604800);
+vm.warp(proposalAfterSuccess.endBlockTimestamp +4);
+
+customGovernor.succeedProposal(proposalId);
 
 CustomBuilderGovernor.Proposal memory proposalBeforeQueued = customGovernor.getProposal(proposalId);
 
-CustomBuilderGovernor.HighestVotedCustomOption[5] memory customVoteCount = customGovernor.getCustomProposalVotes(proposalId);
-
-console.log(customVoteCount.length, 'Custom Vote Count After Queued');
-
-(uint256[] memory customIndicies, bool isCustomExecutable)= customGovernor.insertionSort(customVoteCount, proposalId);
-
-
-console.log(customIndicies.length, 'Custom Vote Indicies to calldata Count');
-console.log(isCustomExecutable, 'Custom Vote Executable');
-
-
 
 console.log(uint8(proposalBeforeQueued.state),  'Proposal State Before Queued');
+
+vm.warp(proposalBeforeQueued.succeededAt + 1);
 
 
 customGovernor.queueProposal(proposalId);
@@ -395,40 +372,46 @@ bytes32 proposalId = customGovernor.createProposal(
     proposalCreatedCalldata,
     CustomBuilderGovernor.UrgencyLevel.Medium,
     true,
-    2400,
-    block.timestamp + 604800
+    block.timestamp + 604800,
+    1000,
+    3000
 );
 
-console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
+
 vm.stopPrank();
 
 
 // Advance time and activate proposal
 CustomBuilderGovernor.Proposal memory proposal = customGovernor.getProposal(proposalId);
-vm.warp(block.timestamp + proposal.votingDelay + 1);
+vm.warp(proposal.startBlockTimestamp + 5);
 customGovernor.activateProposal(proposalId);
 
 // Vote after activation
 uint256[] memory indices= new uint256[](1); 
 indices[0] = 1;
 
-console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
 
 vm.startPrank(user2);
 customGovernor.castVote(proposalId, "reason", user2, 3, "0x", true, true, false, indices);
 vm.stopPrank();
 
+vm.startPrank(user2);
+vm.expectRevert(CustomBuilderGovernor.AlreadyVoted.selector);
+customGovernor.castVote(proposalId, "reason", user2, 3, "0x", true, true, false, indices);
+vm.stopPrank();
+
 // Warp to end + delay, then queue & execute
-vm.warp(block.timestamp + proposal.endBlockTimestamp + 604800);
+vm.warp(proposal.endBlockTimestamp + 200);
+customGovernor.succeedProposal(proposalId);
+
 customGovernor.queueProposal(proposalId);
 
-console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
+
 
 vm.expectRevert(CustomBuilderGovernor.ExecutionFailed.selector);
 
 customGovernor.executeProposal(proposalId);
 
-console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
 
 }
 
@@ -458,7 +441,7 @@ proposalCreatedValues = [0];
 proposalCreatedCalldata=[abi.encodeWithSignature("rewardsgUser(address,uint256)", user2, 15e18)];
 indicies.push(0);
 
-bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, false, 2400, block.timestamp + 604800); 
+bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, false, block.timestamp + 604800,1000,3000);
 
 govToken.delegate(user2);
 vm.stopPrank();
@@ -466,17 +449,23 @@ vm.stopPrank();
 
 CustomBuilderGovernor.Proposal memory proposal = customGovernor.getProposal(proposalId);
 
-
-vm.warp(block.timestamp + proposal.votingDelay + 2);
+vm.warp(proposal.startBlockTimestamp + 5);
 
 customGovernor.activateProposal(proposalId);
 
+vm.expectRevert(CustomBuilderGovernor.
+InvalidProposalState
+.selector);
+customGovernor.succeedProposal(proposalId);
 
 
-vm.warp(block.timestamp + proposal.endBlockTimestamp + 100);
-vm.expectRevert(CustomBuilderGovernor.QuorumNotReached.selector);
+vm.warp(proposal.endBlockTimestamp + 200);
+customGovernor.succeedProposal(proposalId);
 
-customGovernor.queueProposal(proposalId);
+assert(uint8(customGovernor.getProposal(proposalId)
+    .state) == uint8(CustomBuilderGovernor.ProposalState.Defeated));
+
+
 
 
 
@@ -507,7 +496,7 @@ proposalCreatedValues = [0];
 proposalCreatedCalldata=[abi.encodeWithSignature("rewardsgUser(address,uint256)", user2, 15e18)];
 indicies.push(0);
 
-bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, false, 2400, block.timestamp + 604800); 
+bytes32 proposalId =    customGovernor.createProposal("Coz I've said so though", proposalCreatedTargets, proposalCreatedValues, proposalCreatedCalldata, CustomBuilderGovernor.UrgencyLevel.Medium, false, block.timestamp + 604800, 1000, 3000); 
 
 govToken.delegate(user2);
 vm.stopPrank();
@@ -516,7 +505,7 @@ vm.stopPrank();
 CustomBuilderGovernor.Proposal memory proposal = customGovernor.getProposal(proposalId);
 
 
-vm.warp(block.timestamp + proposal.votingDelay + 2);
+vm.warp(proposal.startBlockTimestamp + 5);
 
 customGovernor.activateProposal(proposalId);
 
@@ -526,11 +515,13 @@ customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 0, "0xx
 
 
 vm.warp(block.timestamp + proposal.endBlockTimestamp + 100);
+
+customGovernor.succeedProposal(proposalId);
+
+vm.warp(proposal.succeededAt + 1);
+
 customGovernor.queueProposal(proposalId);
 
-
-
-vm.warp(block.timestamp + proposal.endBlockTimestamp + 1);
 
 vm.expectRevert(CustomBuilderGovernor.ExecutionFailed.selector);
 
@@ -573,39 +564,36 @@ bytes32 proposalId = customGovernor.createProposal(
     proposalCreatedCalldata,
     CustomBuilderGovernor.UrgencyLevel.Medium,
     true,
-    2400,
-    block.timestamp + 604800
+    block.timestamp + 604800,
+    1000,
+    3000
 );
 
-console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
 vm.stopPrank();
 
 
 // Advance time and activate proposal
 CustomBuilderGovernor.Proposal memory proposal = customGovernor.getProposal(proposalId);
-vm.warp(block.timestamp + proposal.votingDelay + 1);
+vm.warp(proposal.startBlockTimestamp + 5);
 customGovernor.activateProposal(proposalId);
 
 // Vote after activation
 uint256[] memory indices= new uint256[](1); 
 indices[0] = 1;
 
-console.log(uint8(customGovernor.getProposalState(proposalId)), 'Proposal State');
+console.log(uint8(
+    proposal.state
+), 'Proposal State');
 
 
 // Warp to end + delay, then queue & execute
-vm.warp(block.timestamp + proposal.endBlockTimestamp + 604800);
+vm.warp(proposal.endBlockTimestamp + 20);
+customGovernor.succeedProposal(proposalId);
 
-vm.expectRevert(CustomBuilderGovernor.QuorumNotReached.selector);
-
-customGovernor.queueProposal(proposalId);
-
-
+assert(uint8(customGovernor.getProposal(proposalId)
+    .state) == uint8(CustomBuilderGovernor.ProposalState.Defeated));
 
 }
-
-
-
 
 function testRewardingWorksProperly() public {
 
@@ -680,11 +668,7 @@ bytes[] memory calldatas;
 
 
 vm.prank(user1);
-    customGovernor.createProposal("Coz I've said so though", targets, values, calldatas, CustomBuilderGovernor.UrgencyLevel.Medium, true, 0, block.timestamp + 604800);
-
-
-
-
+    customGovernor.createProposal("Coz I've said so though", targets, values, calldatas, CustomBuilderGovernor.UrgencyLevel.Medium, true, block.timestamp + 604800, 1000, 3000);
 
 }
 

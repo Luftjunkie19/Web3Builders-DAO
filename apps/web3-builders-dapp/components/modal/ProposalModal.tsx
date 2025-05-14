@@ -45,6 +45,9 @@ proposalEndTime: z.date({'message':'proposalEndTime must be a date'}),
 proposalDelay: z.number({'message':'proposalDelay must be a number'}),
 proposalDelayUnit: z.number({'message':'proposalDelayUnit must be a number'}),
 
+timelockPeriod: z.number({'message':'timelockPeriod must be a number'}),
+timelockUnit: z.number({'message':'timelockUnit must be a number'}),
+
 urgencyLevel: z.bigint({'message':'urgencyLevel must be a number'}),
 
 isCustom: z.string().min(1,{'message':'The voting type must be selected'}),
@@ -138,7 +141,17 @@ function onSubmit(values: z.infer<typeof proposalObject>) {
       address: GOVERNOR_CONTRACT_ADDRESS,
       type:'eip1559',
       functionName:'createProposal',
-      args:[values['shortDescripton'], targets, calldataValues, calldataEndodedBytes, BigInt(values['urgencyLevel']), values['isCustom'] === 'standard' ? false : true, BigInt(values['proposalDelay']), BigInt(new Date(values['proposalEndTime']).getTime()) / BigInt(1000)],
+      args:[
+      values['shortDescripton'], 
+      targets, 
+      calldataValues, 
+      calldataEndodedBytes,
+       BigInt(values['urgencyLevel']),
+      values['isCustom'] === 'standard' ? false : true, 
+      BigInt(new Date(values['proposalEndTime']).getTime()) / BigInt(1000),
+      BigInt(Number(values['proposalDelay']) * Number(values['proposalDelayUnit'])),
+      BigInt(Number(values['timelockPeriod']) * Number(values['timelockUnit'])),
+      ],
     },{
      onError: (error) => {
         console.log(error);

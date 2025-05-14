@@ -29,10 +29,7 @@ const calculateMonthlyDeservedAmountOfTokens =  (dailyReports: number, DAOVoting
 
 const monthlyTokenDistribution = async (req: Request, res: Response) => {
     try {
-     
-
-        
-        
+    
 
         // const tx = await governorTokenContract.monthlyTokenDistribution(userAddress);
         
@@ -53,7 +50,7 @@ const rewardMember = async (req: Request, res: Response) => {
     try {
         const {userAddress} = req.params;
 
-        const {amount} = req.query;
+        const {amount} = req.body;
         
         const tx = await governorTokenContract.rewardUser(userAddress, BigInt(Number(amount)));
         

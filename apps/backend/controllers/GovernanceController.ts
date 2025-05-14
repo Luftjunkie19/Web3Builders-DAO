@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import dotenv from "dotenv";
 import { daoContract, proposalStates, provider } from "../config/ethers.config";
 import { supabaseConfig } from "../config/supabase";
+import { Log, EventLog } from "ethers";
 
 dotenv.config();
 
@@ -13,6 +14,20 @@ const activateProposals = async (req: Request, res: Response) => {
      const filters = daoContract.filters.ProposalCreated();
 
      const events = await daoContract.queryFilter(filters, lastBlock - 499, lastBlock);
+
+     events.filter(async (event:Log | EventLog) => {
+        const state = await daoContract.getProposalState(event.data);
+        
+       return state === 0;
+     }).map(async (event:Log | EventLog) => {
+         const tx = await daoContract.activateProposal(event.data);
+    
+            console.log(tx);
+    
+            const txReceipt = await tx.wait();
+    
+            res.send({message:"success", status:200, data:txReceipt, error:null});
+     })
 
      console.log(filters, "Filters");
 
@@ -28,15 +43,24 @@ const activateProposals = async (req: Request, res: Response) => {
 
 const queueProposals = async (req: Request, res: Response) => {
 try{
-                
-                // const tx = await daoContract.queueProposal(proposalId);
-    
-                // console.log(tx);
-    
-                // const txReceipt = await tx.wait();
-    
-                // res.send({message:"success", status:200, data:txReceipt, error:null});    
+ const lastBlock = await provider.getBlockNumber();
+     const filters = daoContract.filters.ProposalActivated();
+
+     const events = await daoContract.queryFilter(filters, lastBlock - 499, lastBlock);
+
+     events.filter(async (event:Log | EventLog) => {
+        const state = await daoContract.getProposalState(event.data);
         
+       return state === 4;
+     }).map(async (event:Log | EventLog) => {
+         const tx = await daoContract.activateProposal(event.data);
+    
+            console.log(tx);
+    
+            const txReceipt = await tx.wait();
+    
+            res.send({message:"success", status:200, data:txReceipt, error:null});
+     })
 
             }
     catch(error){
@@ -44,7 +68,7 @@ try{
     }
 }
 
-const cancelProposals = async (req: Request, res: Response) => {
+const cancelProposal = async (req: Request, res: Response) => {
         try{
 
             
@@ -134,7 +158,7 @@ const getProposalDetails = async (req: Request, res: Response) => {
 export {
     activateProposals,
     queueProposals,
-    cancelProposals,
+    cancelProposal,
     executeProposals,
     getProposalVotes,
     getProposalState,

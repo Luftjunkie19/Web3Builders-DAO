@@ -16,7 +16,7 @@ function ProposalList({proposals}: Props) {
 
   return (
     <>
-            <p onClick={()=>{console.log(serverData)}} className='text-white text-2xl font-semibold '>List with current proposals</p>
+      <p onClick={()=>{console.log(serverData)}} className='text-white text-2xl font-semibold '>List with current proposals</p>
        <DropdownBar/>
     <div className="flex flex-col overflow-y-auto items-center gap-6  w-full">
 
