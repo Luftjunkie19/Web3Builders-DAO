@@ -1,7 +1,7 @@
 const http = require('http');
 import cors from "cors";
 import express from 'express';
-import { activateProposalJob, executeProposalJob, queueProposalJob } from './jobs/governor/proposalJobs';
+import { activateProposalsJob, executeProposalsJob, queueProposalsJob } from './jobs/governor/proposalJobs';
 import { monthlyContributionJob } from './jobs/token/governanceTokenJobs';
 
 const app = express();
@@ -16,9 +16,9 @@ server.listen(2138, () => {
 
     console.log('Server is running on port 2138');
 
-    queueProposalJob.start();
-    executeProposalJob.start();
-    activateProposalJob.start();
+    executeProposalsJob.start();
+    executeProposalsJob.start();
+    activateProposalsJob.start();
     monthlyContributionJob.start();
 });
 

@@ -13,9 +13,6 @@ type Props = {children: React.ReactNode}
 // Emoji regex — catches most emojis, flags, skin tones, etc.
 const emojiRegex = /^[^\p{Emoji_Presentation}\p{Extended_Pictographic}]*$/u;
 
-// new ethers.Interface(
-//   'functionrewardUser(address,uint256)'
-// ).encodeFunctionData('rewardUser', [address, amount]);
 
 export const proposalObject = z.object({
   title: z.string().min(1),

@@ -83,7 +83,7 @@ const {address}=useAccount();
 
 <div className="flex items-center gap-2">
 <p  className=' text-xs  text-white'>{fullProposalObject as any && (fullProposalObject as any) && new Date(Number(((fullProposalObject as any).endBlockTimestamp)) * 1000).getTime() >= new Date().getTime() ? '🔓 Open' :  "🔒 Closed"}</p>
-      <p className={`${new Date(Number(((fullProposalObject as any).endBlockTimestamp)) * 1000).getTime() >= new Date().getTime() ? 'text-(--hacker-green-4)' : 'text-red-500'}   text-xs`}>{fullProposalObject as any && `${formatDistanceStrict(new Date(Number(((fullProposalObject as any).endBlockTimestamp)) * 1000), new Date())}`}</p>
+      <p onClick={()=>console.log(new Date(Number(((fullProposalObject as any).endBlockTimestamp)) * 1000))} className={`${new Date(Number(((fullProposalObject as any).endBlockTimestamp)) * 1000).getTime() >= new Date().getTime() ? 'text-(--hacker-green-4)' : 'text-red-500'}   text-xs`}>{fullProposalObject as any && `${formatDistanceStrict(new Date(Number(((fullProposalObject as any).endBlockTimestamp)) * 1000), new Date())}`}</p>
 </div>
     </div>
       </div>

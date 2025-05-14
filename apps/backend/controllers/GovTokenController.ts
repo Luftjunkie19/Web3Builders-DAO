@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { governorTokenContract } from "../config/ethers.config";
-import { error } from "console";
 import { supabaseConfig } from "../config/supabase";
 
+
+// Single User Action
 const intialTokenDistribution = async (req: Request, res: Response) => {
 try {
     const {userAddress} = req.params;
@@ -20,29 +21,6 @@ try {
     console.log(error);
     res.json({data:null, error, message:"error", status:500});
 }
-}
-
-const calculateMonthlyDeservedAmountOfTokens =  (dailyReports: number, DAOVotingPartcipation:number, DAOProposalsSucceeded: number, problemsSolved: number, issuesReported: number, vcMinutes: number, avgMessagesPerDay: number) => {
-      return (dailyReports * 1.25 + DAOVotingPartcipation * 3 + DAOProposalsSucceeded * 1.75 +  problemsSolved * 3 + issuesReported * 1.45 + vcMinutes * 0.1 + Math.floor(avgMessagesPerDay / 10) * 1);
-}
-
-
-const monthlyTokenDistribution = async (req: Request, res: Response) => {
-    try {
-    
-
-        // const tx = await governorTokenContract.monthlyTokenDistribution(userAddress);
-        
-        // const txReceipt = await tx.wait();
-        
-        // console.log(txReceipt);
-        
-        // res.json({data:txReceipt,error:null, message:"success", status:200});
-       
-    } catch (error) {
-            console.log(error);
-    res.json({data:null, error, message:"error", status:500});
-    }
 }
 
 
@@ -87,7 +65,7 @@ const punishMember = async (req: Request, res: Response) => {
     }
 }
 
-const getUserTokenBalance = async (req: Request, res: Response) => {
+const  getUserTokenBalance = async (req: Request, res: Response) => {
 try {
     const {userAddress} = req.params;
 
@@ -113,9 +91,32 @@ try {
 }
 }
 
+
+
+// Multiple users actions
+const monthlyTokenDistribution = async (req: Request, res: Response) => {
+    try {
+// [].map(async (userAddress) => {
+
+//     const tx = await governorTokenContract.rewardMonthlyTokenDistribution(BigInt(1),BigInt(1),BigInt(1),BigInt(1),BigInt(1),BigInt(1),BigInt(1), userAddress);
+        
+//         const txReceipt = await tx.wait();
+        
+//         console.log(txReceipt);
+        
+//         res.json({data:txReceipt,error:null, message:"success", status:200});
+// });
+    res.json({data:null, error:null, message:"success", status:200});
+    } catch (error) {
+            console.log(error);
+    res.json({data:null, error, message:"error", status:500});
+    }
+}
+
 export {
     intialTokenDistribution,
     punishMember,
     rewardMember,
-    getUserTokenBalance
+    getUserTokenBalance,
+    monthlyTokenDistribution
 }

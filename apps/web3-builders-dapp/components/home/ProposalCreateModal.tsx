@@ -5,8 +5,9 @@ import { Textarea } from '../ui/textarea'
 import { Button } from '../ui/button'
 import { Calendar, EllipsisIcon } from 'lucide-react'
 import { toast } from 'sonner';
-import { useAccount } from 'wagmi';
+import { useAccount, useWriteContract } from 'wagmi';
 import useGetLoggedInUser from '@/hooks/useGetLoggedInUser';
+import { TOKEN_CONTRACT_ADDRESS, tokenContractAbi } from '@/contracts/token/config';
 
 
 type Props = {}
@@ -15,6 +16,9 @@ function ProposalCard({}: Props) {
 
   const {address}=useAccount();
   const {currentUser}=useGetLoggedInUser();
+
+
+  const {writeContract}=useWriteContract();
 
   return (
     <>
@@ -41,9 +45,14 @@ function ProposalCard({}: Props) {
 </button>
       </div>
       <Button onClick={()=>{
-        if(!address){
-          toast.error('Please connect your wallet !');
-        }
+    
+
+        writeContract({
+          abi: tokenContractAbi,
+          address: TOKEN_CONTRACT_ADDRESS,
+          functionName:'handInUserInitialTokens',
+          args:[2,2,2,2,2, true],
+        })
       }} className='hover:bg-(--hacker-green-4) cursor-pointer transition-all duration-500  px-6 hover:text-zinc-800 mr-4'>Propose</Button>
     </div>
     </div>

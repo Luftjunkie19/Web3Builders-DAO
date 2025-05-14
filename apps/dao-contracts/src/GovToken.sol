@@ -19,6 +19,7 @@
   event InitialTokensReceived(address indexed account);
   event UserRewarded(address indexed account, uint256 indexed amount);
   event UserPunished(address indexed account, uint256 indexed amount);
+  event UserReceivedMonthlyDistribution(address indexed account, uint256 indexed amount);
 
   enum TokenReceiveLevel {
     LOW,
@@ -206,6 +207,14 @@
   emit UserRewarded(user, amount);
   }
 
+function rewardMonthlyTokenDistribution(uint256 dailyReports, uint256 DAOVotingPartcipation, uint256 DAOProposalsSucceeded, uint256 problemsSolved, uint256 issuesReported, uint256 vcMinutes, uint256 avgMessagesPerDay, address user) external {
+
+  uint256 amount = dailyReports * 125e16 + DAOVotingPartcipation * 3e18 + DAOProposalsSucceeded * 175e16 + problemsSolved * 3e18 + issuesReported * 145e16 + vcMinutes * 1e17 + avgMessagesPerDay * 1e14;
+
+_mint(user, amount);
+
+emit UserReceivedMonthlyDistribution(user, amount);
+}
 
 
 
