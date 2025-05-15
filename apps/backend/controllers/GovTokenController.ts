@@ -14,12 +14,12 @@ try {
     
     console.log(txReceipt);
     
-    res.json({data:txReceipt,error:null, message:"success", status:200});
+    res.status(200).json({data:txReceipt,error:null, message:"success", status:200});
 
     
 } catch (error) {
     console.log(error);
-    res.json({data:null, error, message:"error", status:500});
+    res.status(500).json({data:null, error, message:"error", status:500});
 }
 }
 
@@ -36,11 +36,11 @@ const rewardMember = async (req: Request, res: Response) => {
         
         console.log(txReceipt);
         
-        res.json({data:txReceipt,error:null, message:"success", status:200});
+        res.status(200).json({data:txReceipt,error:null, message:"success", status:200});
        
     } catch (error) {
             console.log(error);
-    res.json({data:null, error, message:"error", status:500});
+    res.status(500).json({data:null, error, message:"error", status:500});
     }
 }
 
@@ -57,11 +57,11 @@ const punishMember = async (req: Request, res: Response) => {
         
         console.log(txReceipt);
         
-        res.json({data:txReceipt,error:null, message:"success", status:200});
+        res.status(200).json({data:txReceipt,error:null, message:"success", status:200});
        
     } catch (error) {
             console.log(error);
-    res.json({data:null, error, message:"error", status:500});
+    res.status(500).json({data:null, error, message:"error", status:500});
     }
 }
 
@@ -74,20 +74,20 @@ try {
     console.log(userDBObject.data);
 
     if(!userDBObject.data){
-        res.json({message:"error", data:null, error:"The user with provided address does not exist", userAddress , status: 500});
+        res.status(404).json({message:"error", data:null, error:"The user with provided address does not exist", userAddress, status:404 });
     }
 
     if(userDBObject.error){
-         res.json({message:"error", data:null, error:userDBObject.error,userAddress, status:500});
+         res.status(500).json({message:"error", data:null, error:userDBObject.error,userAddress, status:500 });
     }
 
     const userTokens = await governorTokenContract.getVotes(userAddress);
 
-    res.json({message:`${userDBObject.data.nickname} possesses ${Math.floor(Number(userTokens)/1e18)} BUILD Tokens`, data:Math.floor(Number(userTokens)/1e18), status:200, userAddress, error:null});
+    res.status(200).json({message:`${userDBObject.data.nickname} possesses ${Math.floor(Number(userTokens)/1e18)} BUILD Tokens`, data:Math.floor(Number(userTokens)/1e18),userAddress, error:null, status:200});
     
 } catch (error) {
     console.log(error);
-    res.json({data:null, error, message:"error", status:500});
+    res.status(500).json({data:null, error, message:"error", status:500});
 }
 }
 
@@ -106,10 +106,10 @@ const monthlyTokenDistribution = async (req: Request, res: Response) => {
         
 //         res.json({data:txReceipt,error:null, message:"success", status:200});
 // });
-    res.json({data:null, error:null, message:"success", status:200});
+    res.status(200).json({data:null, error:null, message:"success", status:200});
     } catch (error) {
             console.log(error);
-    res.json({data:null, error, message:"error", status:500});
+    res.status(500).json({data:null, error, message:"error", status:500});
     }
 }
 

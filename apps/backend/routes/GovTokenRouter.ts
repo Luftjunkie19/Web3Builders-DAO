@@ -6,13 +6,14 @@ const govTokenRouter = Router();
 
 govTokenRouter.get('/influence/:userAddress', getUserTokenBalance);
 
+govTokenRouter.get('/monthly_token_distribution', monthlyTokenDistribution);
+
 govTokenRouter.post('/reward_member/:userAddress', rewardMember);
 
 govTokenRouter.post('/punish_member/:userAddress', punishMember);
 
 govTokenRouter.post('/intial_token_distribution/:userAddress', intialTokenDistribution);
 
-govTokenRouter.post('/monthly_token_distribution', monthlyTokenDistribution);
 
 
 

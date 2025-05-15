@@ -12,3 +12,7 @@ docs/
 
 # Dotenv file
 .env
+
+foundry.toml
+
+apps/dao-contracts/foundry.toml

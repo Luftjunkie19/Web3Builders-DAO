@@ -22,6 +22,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@types/cors": "^2.8.18",
     "cors": "^2.8.5"
   }
 }

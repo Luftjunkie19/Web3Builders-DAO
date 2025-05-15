@@ -14,10 +14,6 @@ const http = require('http');
 const app = express();
 dotenv.config();
 
-app.use(cors());
-app.use(express.json());
-
-
 // let whitelist=['http://localhost:3000', 'http://localhost:2138', 'http://localhost:2137'];
 
 // const corsOptions = {
@@ -29,6 +25,10 @@ app.use(express.json());
 //         }
 //     }
 // }
+app.use(cors());
+app.use(express.json());
+
+
 
 // app.use(cors(corsOptions));
 app.use('/governance',governanceRouter);
@@ -38,7 +38,7 @@ const server = http.createServer(app);
 
 server.listen(2137, () => {
 
-    executeGovenorContractEvents();
+executeGovenorContractEvents();
 executeGovenorTokenEvents();
 
  logger.info('Server is running on port 2137');

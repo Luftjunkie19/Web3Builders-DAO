@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.24;
 
-import {Test} from "../../lib/forge-std/src/Test.sol";
+import "../../lib/forge-std/src/Test.sol";
 import {IVotes} from "../../lib/openzeppelin-contracts/contracts/governance/utils/IVotes.sol";
 import {CustomBuilderGovernor} from "../../src/CustomGovernor.sol";
 import {GovernmentToken} from "../../src/GovToken.sol";
@@ -11,6 +11,9 @@ import {console} from "../../lib/forge-std/src/console.sol";
 import {DeployContract} from "../../script/GovernanceContracts.s.sol";
 
 contract TestCustomDAO is Test {
+event InitialTokensReceived(address indexed account);
+
+
     DeployContract deployer;
 
     CustomBuilderGovernor public customGovernor;
@@ -26,8 +29,21 @@ bytes[] proposalCreatedCalldata;
 
 uint256[]  indicies;
 
+uint256 sepolia_forkId;
+
+event ProposalVoted(
+        bytes32 id,
+        address voter,
+        uint256 weight
+    );
  function setUp() public {
         deployer = new DeployContract();
+
+sepolia_forkId= vm.createFork(SEPOLIA_FORK_URL)
+
+// selectFork - selects the active fork
+// createSelectFork - creates and selects the fork simultaneously
+// rollFork
 
 (customGovernor, govToken) = deployer.run();
 
@@ -51,6 +67,11 @@ function testgetProposalCount() public view {
         vm.assume(supply > 19e24);
 
         vm.prank(user1);
+
+        // vm.expectEmit(true);
+
+        // emit InitialTokensReceived(user1);
+
         govToken.handInUserInitialTokens(
             GovernmentToken.TokenReceiveLevel.MEDIUM,
             GovernmentToken.TokenReceiveLevel.MEDIUM_LOW,
@@ -182,8 +203,13 @@ CustomBuilderGovernor.Proposal memory proposalAfterSuccess = customGovernor.getP
 
 assert(proposalAfterSuccess.state == CustomBuilderGovernor.ProposalState.Active);
 
+
+
+
 vm.prank(user2);
 customGovernor.castVote(proposalId, 'Coz Im gonna kick your ass', user2, 0, "0xx", wannaCastVoteFailProposal.isCustom, true, false, indicies);
+
+
 
 (uint256 yesVotes, uint256 noVotes, uint256 abstainVotes) = customGovernor.getStandardProposalVotes(proposalId);
 

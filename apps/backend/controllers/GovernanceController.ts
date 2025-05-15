@@ -21,7 +21,7 @@ const activateProposals = async (req: Request, res: Response) => {
 
      const events = await daoContract.queryFilter(filters, -499);
 
-events.map( async (event, index) => {
+const receipts = events.map(async (event, index) => {
    try{
      const proposal= await daoContract.getProposal((event as ProposalEventArgs).args[0]);
 
@@ -30,17 +30,16 @@ events.map( async (event, index) => {
         console.log(tx);
 
         const txReceipt = await tx.wait();
-
-        res.send({message:"success", status:200, data:txReceipt, error:null});
+        return txReceipt;
     }
    }catch(err){
        console.log(err);
-       res.send({message:"error", status:500, data:null, error:err});
+       res.status(500).json({data:null, error:err, message:"error", status:500});
    }
 
 });
 
-     res.send({message:"success", status:200, data:events, error:null});
+     res.send({message:"success", status:200, data:receipts, error:null});
     }
     catch(error){
         console.log(error);
@@ -59,9 +58,7 @@ const finishProposals= async (req: Request, res: Response) => {
      console.log(events);
 
 
-
-
-     events.map(async (event) => {
+ const receipts =    events.map(async (event) => {
         const proposal = await daoContract.getProposal((event as ProposalEventArgs).args[0]);
         console.log(proposal);
         if(proposal[6] === 1 && new Date(Number(proposal[4]) * 1000).getTime() <= new Date().getTime()){
@@ -69,15 +66,16 @@ const finishProposals= async (req: Request, res: Response) => {
             console.log(tx);
     
             const txReceipt = await tx.wait();
-    
-            res.send({message:"success", status:200, data:txReceipt, error:null});
+return txReceipt
         }
     });
-    res.json({data:events, error:null, message:"success", status:200});
+    
+    res.status(200).json({data:receipts, error:null, message:"success", status:200});
 
     }
      catch(err){
         console.log(err);
+        res.status(500).json({data:null, error:err, message:"success", status:200});
      }
     }
 
@@ -88,27 +86,27 @@ try{
 
      const events = await daoContract.queryFilter(filters, lastBlock - 499, lastBlock);
 
-     res.json({data:events, error:null, message:"success", status:200});
+ const receipts =    events.map(async (event) => {
+        const proposal = await daoContract.getProposal((event as ProposalEventArgs).args[0]);
+        console.log(proposal);
+        if(proposal[6] === 4){
+            const tx = await daoContract.queueProposal((event as ProposalEventArgs).args[0]);
+            console.log(tx);
+    
+            const txReceipt = await tx.wait();
+    return txReceipt
+          
+        }
+    });
 
-    //  events.filter(async (event:Log | EventLog) => {
-    //     const proposal = await daoContract.getProposal(event.data);
-        
-    //    return proposal.state === 4;
-    //  }).map(async (event:Log | EventLog) => {
-    //      const tx = await daoContract.activateProposal(event.data);
-    
-    //         console.log(tx);
-    
-    //         const txReceipt = await tx.wait();
-    
-    //         res.send({message:"success", status:200, data:txReceipt, error:null});
-    //  });
-
-            }
-    catch(error){
-        res.send({message:"error", status:500, data:null, error});
+    res.status(200).json({data:receipts, error:null, message:"success", status:200});
     }
-}
+     catch(err){
+        console.log(err);
+        res.status(500).json({data:null, error:err, message:"error", status:500});
+     }
+    }
+
 
 const cancelProposal = async (req: Request, res: Response) => {
     const {proposalId} = req.params;
@@ -121,10 +119,10 @@ const cancelProposal = async (req: Request, res: Response) => {
     
                 const txReceipt = await tx.wait();
     
-                res.send({message:"success", status:200, data:txReceipt, error:null});
+                res.status(200).send({message:"success", status:200, data:txReceipt, error:null});
         }
     catch(error){
-        res.send({message:"error", status:500, data:null, error});
+        res.status(500).send({message:"error", status:500, data:null, error});
     }
 }
 
@@ -138,22 +136,22 @@ const executeProposals = async (req: Request, res: Response) => {
 
  console.log(events);
 
-    //  events.filter(async (event:Log | EventLog) => {
-    //     const proposal = await daoContract.getProposal(event.data);
-        
-    //    return proposal.state === 4;
-    //  }).map(async (event:Log | EventLog) => {
-    //      const tx = await daoContract.executeProposal(event.data);
-    
-    //         console.log(tx);
-    
-    //         const txReceipt = await tx.wait();
-    
-    //         res.send({message:"success", status:200, data:txReceipt, error:null});
-    //  });
+
+const receipts =events.map(async (event) => {
+                const proposal = await daoContract.getProposal((event as ProposalEventArgs).args[0]); 
+                if(proposal[6] === 5){
+                    const tx = await daoContract.executeProposal((event as ProposalEventArgs).args[0]);
+                    console.log(tx);
+            
+                    const txReceipt = await tx.wait();
+                    console.log(txReceipt);
+            
+                }
+            });
+            res.status(200).send({message:"success", status:200, data:receipts, error:null});
         }
     catch(error){
-        res.send({message:"error", status:500, data:null, error});
+        res.status(500).send({message:"error", status:500, data:null, error});
     }
 }
 
@@ -163,14 +161,14 @@ const getProposalVotes = async (req: Request, res: Response) => {
             const {isCustom} = req.body;
             if(isCustom){
                 const votes = await daoContract.getCustomProposalVotes(proposalId);
-                res.send({message:"success", status:200, data:votes, error:null});
+                res.status(200).send({message:"success", status:200, data:votes, error:null});
             }else{
                 const standardVotes = await daoContract.getStandardProposalVotes(proposalId);
-                res.send({message:"success", status:200, tokenAmount:standardVotes, error:null});
+                res.status(200).send({message:"success", status:200, data:standardVotes, error:null});
             }
         }
     catch(error){
-        res.send({message:"error", status:500, data:null, error});
+        res.status(500).send({message:"error", status:500, data:null, error});
     }
 }
 
@@ -181,10 +179,10 @@ const getProposalState = async (req: Request, res: Response) => {
             
             const stateName=proposalStates[proposal.state];
 
-            res.send({message:"success", status:200, data:`The proposal (${proposalId}) is ${stateName}`, error:null});
+            res.status(200).send({message:"success", status:200, data:`The proposal (${proposalId}) is ${stateName}`, error:null});
         }
     catch(error){
-        res.send({message:"error", status:500, data:null, error});
+        res.status(500).send({message:"error", status:500, data:null, error});
     }
 }
 
@@ -192,10 +190,10 @@ const getProposalQuorum = async (req: Request, res: Response) => {
         try{
             const {proposalId} = req.params;
             const quorum = await daoContract.getProposalQuorumNeeded(proposalId);
-            res.send({message:"success", status:200, data:quorum, error:null});
+            res.status(200).send({message:"success", status:200, data:quorum, error:null});
         }
     catch(error){
-        res.send({message:"error", status:500, data:null, error});
+        res.status(500).send({message:"error", status:500, data:null, error});
     }
 }
 
@@ -204,9 +202,9 @@ const getProposalDetails = async (req: Request, res: Response) => {
         const {proposalId} = req.params;
         const proposalDetails = await daoContract.getProposal(proposalId);
         console.log(proposalDetails);
-        res.send({message:"success", status:200, data:proposalDetails, error:null});
+        res.status(200).send({message:"success", status:200, data:proposalDetails, error:null});
     }catch(err){
-        res.send({message:"error", status:500, data:null, error:err});
+        res.status(500).send({message:"error", status:500, data:null, error:err});
     }
 }
 

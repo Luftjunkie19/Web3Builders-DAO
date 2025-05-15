@@ -41,3 +41,7 @@ yarn-error.log*
 *.pem
 
 apps/discord-bot/discordConfig.json
+
+foundry.toml
+
+apps/dao-contracts/foundry.toml
