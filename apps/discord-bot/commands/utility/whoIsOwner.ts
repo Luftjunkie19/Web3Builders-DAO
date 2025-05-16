@@ -37,7 +37,6 @@ try{
     await interaction.reply(`The owner of this server is: ${interaction.member.user.globalName}`);
 }
 catch(error) {
-    console.log("Start of the world", interaction.member.user.globalName, "End of the world");
     console.error(`Error executing ${interaction}:`, error);
     }
 }

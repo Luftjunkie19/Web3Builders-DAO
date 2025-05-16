@@ -1,5 +1,5 @@
 import { REST, Routes} from 'discord.js';
-const { clientId, guildId, token } = require('../config.json');
+const { clientId, guildId, token } = require('./discordConfig.json');
 const fs = require('node:fs');
 const path = require('node:path');
 const dotenv = require('dotenv');
@@ -52,6 +52,8 @@ const rest = new REST().setToken(process.env.DISCORD_BOT_TOKEN || token);
 		console.log(`Successfully reloaded ${data} application (/) commands.`);
 	} catch (error) {
 		// And of course, make sure you catch and log any errors!
+		console.log("Deployed commands error");
 		console.error(error);
+		console.log("Deployed commands error");
 	}
 })();
