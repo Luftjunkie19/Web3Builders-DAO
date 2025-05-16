@@ -30,6 +30,7 @@ bytes[] proposalCreatedCalldata;
 uint256[]  indicies;
 
 uint256 sepolia_forkId;
+uint256 holesky_forkId;
 
 event ProposalVoted(
         bytes32 id,
@@ -39,11 +40,14 @@ event ProposalVoted(
  function setUp() public {
         deployer = new DeployContract();
 
-sepolia_forkId= vm.createFork(SEPOLIA_FORK_URL)
-
+sepolia_forkId= vm.createFork(vm.envString("ETH_ALCHEMY_SEPOLIA_RPC_URL"));
+holesky_forkId= vm.createFork(vm.envString("ETH_ALCHEMY_HOLESKY_RPC_URL"));
 // selectFork - selects the active fork
 // createSelectFork - creates and selects the fork simultaneously
 // rollFork
+
+// vm.makePersistent(address) - saves the address in the persistent storage
+// vm.isPersitent - checks if the address is in the persistent storage
 
 (customGovernor, govToken) = deployer.run();
 
@@ -52,6 +56,13 @@ sepolia_forkId= vm.createFork(SEPOLIA_FORK_URL)
     }
 
 
+function testForkIsWorking() public {
+
+
+    vm.selectFork(sepolia_forkId);
+    console.log(vm.activeFork());
+    assertEq(vm.activeFork(), sepolia_forkId);
+}
 
 function testGetIVotesToken() public view {
     assert(address(customGovernor.getIVotesToken()) == address(govToken)); 

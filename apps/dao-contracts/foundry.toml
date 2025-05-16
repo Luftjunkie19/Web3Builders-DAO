@@ -4,4 +4,11 @@ out = "out"
 libs = ["lib"]
 solc_version = "0.8.24"
 
+[fuzz]
+failure_persist_file="/tests/failures.txt"
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+fail_on_revert=true
+
+gas_reports=["CustomBuilderGovernor", "GovernmentToken", "DeployContract"]
