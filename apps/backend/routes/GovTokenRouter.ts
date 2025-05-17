@@ -4,7 +4,7 @@ import { getUserTokenBalance,monthlyTokenDistribution, intialTokenDistribution, 
 const govTokenRouter = Router();
 
 
-govTokenRouter.get('/influence/:userAddress', getUserTokenBalance);
+govTokenRouter.get('/influence/:nickname', getUserTokenBalance);
 
 govTokenRouter.get('/monthly_token_distribution', monthlyTokenDistribution);
 

@@ -4,6 +4,7 @@ import { executeGovenorContractEvents } from "./event-listeners/GovenorEventList
 import govTokenRouter from "./routes/GovTokenRouter";
 import governanceRouter from "./routes/GovernanceRouter";
 import { Request, Response } from "express";
+import membersRouter from "./routes/MembersRouter";
 const express = require('express');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -33,6 +34,7 @@ app.use(express.json());
 // app.use(cors(corsOptions));
 app.use('/governance',governanceRouter);
 app.use('/gov_token', govTokenRouter);
+app.use('/members', membersRouter);
 const server = http.createServer(app);
 
 

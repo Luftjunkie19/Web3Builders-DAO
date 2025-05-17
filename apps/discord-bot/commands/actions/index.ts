@@ -13,7 +13,7 @@ const row = new ActionRowBuilder<ButtonBuilder>().addComponents([new ButtonBuild
 
     try {
    const message =  await interaction.reply({
-            content:'Does Jobited has the best team ever ?',
+            content:'Does Jobited have the best team and hunts out the best blockchain developers in the planet ?',
             components: [row],
             withResponse: true
         });
