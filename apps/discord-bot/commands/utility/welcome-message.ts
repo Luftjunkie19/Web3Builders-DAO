@@ -7,7 +7,7 @@ const data = new SlashCommandBuilder()
 module.exports = {
     cooldown:10,
     data: data,
-    async execute(interaction:any
+    async execute(interaction:ChatInputCommandInteraction
     ) {
 try{
     await interaction.reply
