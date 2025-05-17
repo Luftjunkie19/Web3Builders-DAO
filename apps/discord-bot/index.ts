@@ -15,7 +15,7 @@ client.commands = new Collection();
 client.cooldowns= new Collection();
 
 
-const folderPath = path.join(__dirname, '/commands');
+const folderPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(folderPath);
 
 for (const folder of commandFolders) {
@@ -32,48 +32,27 @@ for (const file of commandFiles) {
 }
 }
 
-const eventsPath = path.join(__dirname, '/events');
+const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter((file:any) => file.endsWith('.ts'));
+
+console.log(eventFiles);
+
 for (const file of eventFiles) {
     const filePath = path.join(eventsPath, file);
     const event = require(filePath);
     if (event.once) {
-        client.once(event.name, (...args:any) => event.execute(...args));
+        client.once(event.name, (...args:any) => {
+            console.log(args);
+            event.execute(...args);
+        });
     }
     else {
-        client.on(event.name, (...args:any) => event.execute(...args));
+        client.on(event.name, (...args:any) => {
+            console.log(args);
+            event.execute(...args);
+        });
     }
 }
 
-client.once(Events.ClientReady, async (readyClient:any) => {
-console.log(`Ready! Bot is online and logged in as ${readyClient.user.tag}`);
-    // Log in to Discord with your client's token
-});
-
-client.on(Events.InteractionCreate, async (interaction:BaseInteraction) => {
-    if (!interaction.isChatInputCommand()) return;
-    console.log(interaction);
-
-    const command = interaction.client.commands.get(interaction.commandName);
-
-    if (!command) {
-        console.error(`No command matching ${interaction.commandName} was found.`);
-        return;
-    }
-
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        console.error(`Error executing ${interaction.commandName}:`, error);
-        await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-       if(interaction.replied || interaction.deferred) {
-            await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-        }
-        else {
-            await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-        }
-   
-    }
-});
 
 client.login(token);

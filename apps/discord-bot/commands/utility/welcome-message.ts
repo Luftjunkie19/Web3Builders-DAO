@@ -5,6 +5,7 @@ const data = new SlashCommandBuilder()
 .setDescription('Set the welcome message')
 
 module.exports = {
+    cooldown:10,
     data: data,
     async execute(interaction:any
     ) {

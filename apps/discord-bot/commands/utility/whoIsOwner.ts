@@ -6,7 +6,7 @@ const data = new SlashCommandBuilder()
 .setDescription('Get the owner of the server');
 
 module.exports = {
-    cooldown:20,
+    cooldown:10,
     data: data,
     async execute(interaction:any
 ) {
@@ -34,7 +34,7 @@ module.exports = {
 // setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount());
 
 try{
-    await interaction.reply(`The owner of this server is: ${interaction.member.user.globalName}`);
+    await interaction.reply(`The owner of this server is: ${interaction.member.user.globalName}, ${interaction.member.joinedAt}`);
 }
 catch(error) {
     console.error(`Error executing ${interaction}:`, error);

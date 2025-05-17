@@ -46,10 +46,6 @@ const rest = new REST().setToken(process.env.DISCORD_BOT_TOKEN || token);
 			{ body: commands },
 		);
 
-		console.log("Commands",commands);
-		console.log("Data", data);
-
-		console.log(`Successfully reloaded ${data} application (/) commands.`);
 	} catch (error) {
 		// And of course, make sure you catch and log any errors!
 		console.log("Deployed commands error");
