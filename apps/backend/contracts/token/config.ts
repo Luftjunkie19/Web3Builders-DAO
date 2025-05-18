@@ -1,4 +1,4 @@
-export const TOKEN_CONTRACT_ADDRESS = "0xB13304dF3748Fc8437EFf8647987aD1e572FFC9C";
+export const TOKEN_CONTRACT_ADDRESS = "0x906Ec8D8C64990285EFE1a089ee0b65dc71b692a";
 
 export const tokenContractAbi = [
     
@@ -43,7 +43,14 @@ export const tokenContractAbi = [
 
 {"type":"function","name":"getVotes","inputs":[{"name":"account","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},
 
-{"type":"function","name":"handInUserInitialTokens","inputs":[{"name":"_psrLevel","type":"uint8","internalType":"enum GovernmentToken.TokenReceiveLevel"},{"name":"_jexsLevel","type":"uint8","internalType":"enum GovernmentToken.TokenReceiveLevel"},{"name":"_tklLevel","type":"uint8","internalType":"enum GovernmentToken.TechnologyKnowledgeLevel"},{"name":"_web3IntrestLevel","type":"uint8","internalType":"enum GovernmentToken.TokenReceiveLevel"},{"name":"_kvtrLevel","type":"uint8","internalType":"enum GovernmentToken.KnowledgeVerificationTestRate"},{"name":"isAdmin","type":"bool","internalType":"bool"}],"outputs":[],"stateMutability":"nonpayable"},
+{"type":"function","name":"handInUserInitialTokens","inputs":[
+    {"name":"_psrLevel","type":"uint8","internalType":"enum GovernmentToken.TokenReceiveLevel"},
+    {"name":"_jexsLevel","type":"uint8","internalType":"enum GovernmentToken.TokenReceiveLevel"},
+    {"name":"_tklLevel","type":"uint8","internalType":"enum GovernmentToken.TechnologyKnowledgeLevel"},
+    {"name":"_web3IntrestLevel","type":"uint8","internalType":"enum GovernmentToken.TokenReceiveLevel"},
+    {"name":"_kvtrLevel","type":"uint8","internalType":"enum GovernmentToken.KnowledgeVerificationTestRate"},
+    {"name":"isAdmin","type":"bool","internalType":"bool"}],
+    "outputs":[],"stateMutability":"nonpayable"},
 
 {"type":"function","name":"increaseUserMaliciousActions","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},
 

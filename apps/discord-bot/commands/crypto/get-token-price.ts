@@ -1,15 +1,20 @@
 import {  ChannelType, ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import dotenv from 'dotenv';
+import { getTokenURL } from '../../config';
 dotenv.config();
 
 const data = new SlashCommandBuilder()
 .setName('get-token-price')
 .setDescription('Get the owner of the server')
 .addStringOption(option =>
-      option.setName('pair')
-        .setDescription('The trading pair like ETHBTC or BTCUSDT')
+      option.setName('price-of')
+        .setDescription('The token/coin we want to get the price of')
         .setRequired(true)
-    ).addChannelOption(option => option.setName('channel').addChannelTypes(ChannelType.GuildText).setDescription('The channel to send the message').setRequired(true));
+    ).addStringOption(option => option.setName('price-in-tickers')
+    .setDescription('Write the sequence of tickers you want to get the price of e.g. ETH,USDC')
+    .setRequired(true))
+    .addChannelOption(option => option.setName('channel').addChannelTypes(ChannelType.GuildText)
+    .setDescription('The channel to send the message').setRequired(true));
 
 module.exports = {
     cooldown:20,
@@ -18,21 +23,17 @@ module.exports = {
 ) {
 try{
 
-    const pair = interaction.options.getString('pair');
-
-    const cryptoPriceTickerRequest = await fetch(`https://api.api-ninjas.com/v1/cryptoprice?symbol=${pair}`, {
-        headers:{
-            'X-Api-Key':process.env.NINJAS_API_KEY as string,
-        }
-    });
-    const cryptoPriceTicker = await cryptoPriceTickerRequest.json();
-
-    if(!cryptoPriceTicker) {
-        return await interaction.reply(`No price found for ${pair}`);
-    };
+    const priceOf = interaction.options.getString('price-of');
+    const priceInTickers= interaction.options.getString('price-in-tickers');
 
 
-    await interaction.reply(`The price on ${cryptoPriceTicker.symbol} pair is ${Number(cryptoPriceTicker.price).toFixed(2)} !`);
+    const cryptoPriceTickers = await getTokenURL(priceOf as string, priceInTickers as string);
+
+    if(!cryptoPriceTickers || cryptoPriceTickers.Response === 'Error'){ 
+        return await interaction.reply({content:`${cryptoPriceTickers.Response}: ${cryptoPriceTickers.Message}`, flags:MessageFlags.Ephemeral});
+}
+
+await interaction.reply(`The price on ${priceOf} with tickers ${priceInTickers} are:\n ${Object.keys(cryptoPriceTickers).map((ticker: string) => `${priceOf} 💱 ${ticker} : ${cryptoPriceTickers[ticker]}`).join('\n')}`);
 }
 catch(error) {
     console.error(`Error executing ${interaction}:`, error);

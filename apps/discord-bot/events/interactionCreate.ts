@@ -3,17 +3,12 @@ import {ChatInputCommandInteraction, Collection, Events, MessageFlags} from 'dis
 
 module.exports={
     name: Events.InteractionCreate,
-    async execute(interaction:
-        ChatInputCommandInteraction
-    ) {
-
-
+    async execute(interaction:any) {
+       
         if (!interaction.isChatInputCommand()) return;
 
 
-
-
-        const command = interaction.client.commands.get(interaction.commandName);
+          const command = interaction.client.commands.get(interaction.commandName);
         if (!command) {
             console.error(`No command matching ${interaction.commandName} was found.`);
             return;
@@ -66,6 +61,6 @@ module.exports={
             }
             console.error(`Error executing ${interaction.commandName}:`, error);
         }
+    
     }
-
 }

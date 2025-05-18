@@ -4,13 +4,7 @@ dotenv.config();
 
 const data = new SlashCommandBuilder()
 .setName('user-vote-power')
-.setDescription('Get the voting power of a user')
-.addStringOption(option =>
-      option.setName('nickname')
-        .setDescription('The nickname of the user to get the voting power of')
-        .setRequired(true)
-    
-    );
+.setDescription('Get the voting power of a user').addUserOption(option => option.setName('member').setDescription('The member of the server you want to get the voting power of').setRequired(true));
 
 module.exports = {
     cooldown:20,
@@ -19,19 +13,21 @@ module.exports = {
 ) {
 try{
 
-    const nickname = interaction.options.getString('nickname');
+    const member = interaction.options.getUser('member');
 
-    console.log(nickname);
+    if(!member){
+        await interaction.reply({content:`No user found with the nickname given.`, flags:MessageFlags.Ephemeral });
+        return;
+    }
 
-
-   const request = await fetch(`http://localhost:2137/gov_token/influence/${nickname}`);
+   const request = await fetch(`http://localhost:2137/gov_token/influence/${member.id}`);
 
    const response = await request.json();
    
    console.log(response);
 
    if(!response || response.error){
- await interaction.reply({content:`No user found with the nickname ${nickname}`, flags:MessageFlags.Ephemeral });
+ await interaction.reply({content:response.error, flags:MessageFlags.Ephemeral });
 return;
 }
 await interaction.reply({content:response.message, flags:MessageFlags.Ephemeral });

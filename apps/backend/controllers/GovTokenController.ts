@@ -67,23 +67,25 @@ const punishMember = async (req: Request, res: Response) => {
 
 const  getUserTokenBalance = async (req: Request, res: Response) => {
 try {
-    const {nickname} = req.params;
+    const {dicordMemberId} = req.params;
 
-    const userDBObject= await supabaseConfig.from('dao_members').select('*').eq('nickname', nickname).single();
+    console.log(dicordMemberId);
+
+    const userDBObject= await supabaseConfig.from('dao_members').select('*').eq('discord_member_id', dicordMemberId).single();
 
     console.log(userDBObject.data);
 
     if(!userDBObject.data){
-        res.status(404).json({message:"error", data:null, error:"The user with provided nickname was not found", nickname, status:404 });
+        res.status(404).json({message:"error", data:null, error:"The user with provided nickname was not found", discord_member_id:dicordMemberId, status:404 });
     }
 
     if(userDBObject.error){
-         res.status(500).json({message:"error", data:null, error:userDBObject.error,nickname, status:500 });
+         res.status(500).json({message:"error", data:null, error:userDBObject.error,discord_member_id:dicordMemberId, status:500 });
     }
 
     const userTokens = await governorTokenContract.getVotes(userDBObject.data.userWalletAddress);
 
-    res.status(200).json({userDBObject, message:`${userDBObject.data.nickname} possesses ${Math.floor(Number(userTokens)/1e18)} BUILD Tokens`, data:Math.floor(Number(userTokens)/1e18),userAddress:userDBObject.data.userWalletAddress, error:null, status:200});
+    res.status(200).json({userDBObject, message:`${userDBObject.data.nickname} possesses ${(Number(userTokens)/1e18).toFixed(2)} BUILD Tokens`, error:null, status:200});
     
 } catch (error) {
     console.log(error);
