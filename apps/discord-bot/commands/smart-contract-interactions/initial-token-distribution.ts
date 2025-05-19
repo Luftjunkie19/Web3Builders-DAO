@@ -1,11 +1,21 @@
-import { ButtonStyle, ComponentType, ModalBuilder, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ButtonStyle, ComponentType, MessageFlags, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from 'discord.js';
 import { ActionRowBuilder, ButtonBuilder } from "discord.js";
 
 
 
 module.exports = {
 data: new SlashCommandBuilder().setName('initial-token-distribution').setDescription('This command allows you as the member of the discord server to receive your initial tokens !'),
-async execute(interaction:StringSelectMenuInteraction){
+async execute(interaction:any){
+
+
+    const checkAbilityResponse = await fetch(`http://localhost:2137/members/get-member/${interaction.user.id}`);
+
+    const checkAbilityResponseJson = await checkAbilityResponse.json();
+
+    if(!checkAbilityResponseJson || checkAbilityResponseJson.error){ 
+        return await interaction.reply({content:checkAbilityResponseJson.error, flags:MessageFlags.Ephemeral});
+    }
+
 
 const customObject:{
     PSR:number,
@@ -145,20 +155,13 @@ const message =  await interaction.reply({
         });
 
 
-const modal = new ModalBuilder().setCustomId('wallet-modal').setTitle('Please enter your wallet address');
 
-        const input = new TextInputBuilder().setCustomId('walletAddress').setLabel('Enter your wallet address').setPlaceholder('0x...').setStyle(TextInputStyle.Short).setRequired(true).setMinLength(42).setMaxLength(42);
-
-        const inputRow = new ActionRowBuilder<TextInputBuilder>().addComponents(input);
-
-
-        modal.addComponents(inputRow);
 
         const collectorFilter = (i: any) => i.user.id === interaction.user.id;
         
         try {
         
-            collector?.on('collect', async (i) => {
+            collector?.on('collect', async (i:any) => {
                 if (i.customId === 'PSR') {
                     console.log('PSR',
                         i.values[0]);
@@ -225,7 +228,7 @@ const modal = new ModalBuilder().setCustomId('wallet-modal').setTitle('Please en
 
             });
 
-            buttonCollector?.on('collect', async (i) => {
+            buttonCollector?.on('collect', async (i:any) => {
                 if (i.customId.includes('-4')) {
                    
                     if(i.customId === 'D-4') questionsCorrectlyAnswered++;
@@ -239,22 +242,19 @@ const modal = new ModalBuilder().setCustomId('wallet-modal').setTitle('Please en
                  
                       if(i.customId === 'C-5') questionsCorrectlyAnswered++;
 
-                    await i.update({content:`${i.customId === 'C-5' ? `✅ Correctly answered question, one more to go ! You can now claim your tokens` : `❌ Wrong answer, This is already an end, you can now claim your tokens`}`, components: [claimTokenRow]});
+                    await i.update({content:`${i.customId === 'C-5' ? `✅ Correctly answered question, one more to go ! You can now claim your tokens` : `❌ Wrong answer, This is already an end, you can now claim your tokens`}`, components: []});
+                
+                    await interaction.user.send({content:`Congratulations you have passed the initial-distribution configuration, you can now claim your tokens !`, 'components':[claimTokenRow]});
                 }
 
+
                 if (i.customId === 'finalStep') {
-                    await i.update({content:`Now pass the final step, by passing your public key ! And participate in DAO !`, components: []});
-               await interaction.showModal(modal,{'withResponse':true});
+                  
             
                 }
             });
 
-         if(interaction.isModalSubmit()){
-             const {TKL, PSR, JEXS, W3I, KVTR}=customObject;
-                console.log(questionsCorrectlyAnswered);
-                // const response= await fetch(`http://localhost:2137/gov_token/initial_distribution/${interaction.user.id}`,
-                //     {method:"POST",body:JSON.stringify({TKL, PSR, JEXS, W3I, KVTR,questionsCorrectlyAnswered})});
-         };
+     
 
         
     } catch (error) {
