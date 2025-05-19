@@ -14,7 +14,6 @@ module.exports={
             return;
         };
        
-        
         const {cooldowns}=interaction.client;
         
         if(!cooldowns.has(interaction.commandName)) {

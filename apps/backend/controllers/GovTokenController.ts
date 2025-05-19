@@ -7,6 +7,7 @@ import { supabaseConfig } from "../config/supabase";
 const intialTokenDistribution = async (req: Request, res: Response) => {
 try {
     const {userAddress} = req.params;
+    const {TKL, } = req.body;
     
     const tx = await governorTokenContract.intialTokenDistribution(userAddress);
     

@@ -1,4 +1,4 @@
-import {  SlashCommandBuilder } from 'discord.js';
+import {  ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import { client } from '../..';
 
 
@@ -10,12 +10,23 @@ const data = new SlashCommandBuilder()
 module.exports = {
     cooldown:10,
     data: data,
-    async execute(interaction:any
+    async execute(interaction:ChatInputCommandInteraction
 ) {
 try{
     console.log("Guild interaction", interaction, "Guild interaction");
+    if(!interaction.guild) {
+ return       await interaction.reply("This command can only be used in a server.");
+    };
+
+    const owner = await interaction.guild.fetchOwner();
+    
+    console.log(owner);
+
+    if(!owner) {
+        return await interaction.reply("The owner of this server could not be found.");
+    }
   
-    await interaction.reply(`The owner of this server is: ${interaction.member.user.globalName}, ${interaction.member.joinedAt}`);
+    await interaction.reply(`The owner of this server is: ${owner.user.globalName} (${owner.id})`);
 }
 catch(error) {
     console.error(`Error executing ${interaction}:`, error);

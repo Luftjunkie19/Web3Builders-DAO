@@ -162,10 +162,10 @@
 
 
     // Public functions (User-Interactive)
-  function handInUserInitialTokens(TokenReceiveLevel _psrLevel, TokenReceiveLevel _jexsLevel, TechnologyKnowledgeLevel _tklLevel, TokenReceiveLevel _web3IntrestLevel, KnowledgeVerificationTestRate _kvtrLevel, bool isAdmin) public  {
-      if (receivedInitialTokens[msg.sender] == true) {
-      punishMember(msg.sender, initial_token_user_amount / 10);
-      emit UserPunished(msg.sender, initial_token_user_amount / 10);
+  function handInUserInitialTokens(TokenReceiveLevel _psrLevel, TokenReceiveLevel _jexsLevel, TechnologyKnowledgeLevel _tklLevel, TokenReceiveLevel _web3IntrestLevel, KnowledgeVerificationTestRate _kvtrLevel, address receiverAddress, bool isAdmin) public  {
+      if (receivedInitialTokens[receiverAddress] == true) {
+      punishMember(receiverAddress, initial_token_user_amount / 10);
+      emit UserPunished(receiverAddress, initial_token_user_amount / 10);
       return;
   }
 
@@ -182,9 +182,9 @@
         }
 
 
-    _mint(msg.sender, amountOfTokens);
-    receivedInitialTokens[msg.sender] = true;
-    emit InitialTokensReceived(msg.sender);
+    _mint(receiverAddress, amountOfTokens);
+    receivedInitialTokens[receiverAddress] = true;
+    emit InitialTokensReceived(receiverAddress);
   }
 
   function punishMember(address user, uint256 amount) public {

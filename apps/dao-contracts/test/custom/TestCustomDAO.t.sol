@@ -89,6 +89,7 @@ function testgetProposalCount() public view {
             GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
             GovernmentToken.TokenReceiveLevel.MEDIUM,
             GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+            user1,
             false
         );
 
@@ -107,6 +108,7 @@ govToken.rewardUser(user1, supply);
             GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
             GovernmentToken.TokenReceiveLevel.MEDIUM,
             GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+                        user1,
             false
         );
 
@@ -139,7 +141,7 @@ console.log(govToken.readMemberInfluence(user1));
 
 function testClaimIntialTokensWorksProperly() public {
     vm.prank(user1);
-    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, true);  
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, user1, true);  
 
 
     uint256 balance = govToken.balanceOf(user1);
@@ -147,7 +149,7 @@ function testClaimIntialTokensWorksProperly() public {
 
 
 vm.prank(user1);
-govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, false);  
+govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, user1, false);  
 
 uint256 balanceAfterInitialTokens = govToken.balanceOf(user1);
 
@@ -157,7 +159,7 @@ assert(balanceAfterInitialTokens < balance);
 
 function testStandardProposalWorkflowWorksOk() public {
     vm.startPrank(user2);
-    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, true); 
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, user2, true); 
   
    govToken.delegate(user2);
    
@@ -261,6 +263,7 @@ govToken.handInUserInitialTokens(
     GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
     GovernmentToken.TokenReceiveLevel.MEDIUM,
     GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+     user1,
     true
 );
 govToken.readMemberInfluence(user1);
@@ -269,7 +272,7 @@ govToken.readMemberInfluence(user1);
 
 function testCustomProposalWorkflowWorksOk() public {
     vm.startPrank(user2);
-    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, true); 
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, user2, true); 
   
    govToken.delegate(user2);
    
@@ -321,6 +324,7 @@ GovernmentToken.TokenReceiveLevel.MEDIUM_LOW,
 GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
 GovernmentToken.TokenReceiveLevel.MEDIUM,
 GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+user2,
 true
 );
 govToken.delegate(user2);
@@ -387,6 +391,7 @@ govToken.handInUserInitialTokens(
     GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
     GovernmentToken.TokenReceiveLevel.MEDIUM,
     GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+    user2,
     true
 );
 govToken.delegate(user2);
@@ -463,6 +468,7 @@ govToken.handInUserInitialTokens(
     GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
     GovernmentToken.TokenReceiveLevel.MEDIUM,
     GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+    user2,
     true
 );
 
@@ -518,6 +524,7 @@ govToken.handInUserInitialTokens(
     GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
     GovernmentToken.TokenReceiveLevel.MEDIUM,
     GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+    user2,
     true
 );
 
@@ -579,6 +586,7 @@ govToken.handInUserInitialTokens(
     GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED,
     GovernmentToken.TokenReceiveLevel.MEDIUM,
     GovernmentToken.KnowledgeVerificationTestRate.HIGH,
+    user2,
     true
 );
 govToken.delegate(user2);
@@ -635,14 +643,14 @@ assert(uint8(customGovernor.getProposal(proposalId)
 function testRewardingWorksProperly() public {
 
  vm.startPrank(user2);
-    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, true); 
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, user2, true); 
   
    govToken.delegate(user2);
    
    vm.stopPrank();
 
     vm.prank(user2);
-    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, true); 
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, user2, true); 
   
    govToken.delegate(user2);
    
@@ -664,14 +672,14 @@ govToken.rewardUser(user1, 15e18);
 
 function testCreateProposalInelligible() public {
     vm.startPrank(user2);
-    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, true); 
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, user2, true); 
   
    govToken.delegate(user2);
    
    vm.stopPrank();
 
      vm.startPrank(user1);
-    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH, true); 
+    govToken.handInUserInitialTokens(GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.TokenReceiveLevel.MEDIUM_LOW, GovernmentToken.TechnologyKnowledgeLevel.NOT_SELECTED, GovernmentToken.TokenReceiveLevel.MEDIUM, GovernmentToken.KnowledgeVerificationTestRate.HIGH,user2, true); 
   
    govToken.delegate(user1);
    
