@@ -6,10 +6,16 @@ import { supabaseConfig } from "../config/supabase";
 // Single User Action
 const intialTokenDistribution = async (req: Request, res: Response) => {
 try {
-    const {userAddress} = req.params;
-    const {TKL, PSR } = req.body;
+    const {memberDiscordId} = req.params;
+    const {PSR, JEXS, W3I, TKL, KVTR } = req.body;
     
-    const tx = await governorTokenContract.intialTokenDistribution(userAddress);
+    const {data} = await supabaseConfig.from('dao_members').select('userWalletAddress, isAdmin').eq('discord_member_id', memberDiscordId).single();
+
+    if(!data){
+        res.status(404).json({message:"error", data:null, error:"The user with provided nickname was not found", discord_member_id:memberDiscordId, status:404 });
+    }
+
+    const tx = await governorTokenContract.intialTokenDistribution(BigInt(PSR), BigInt(JEXS), BigInt(W3I), BigInt(TKL), BigInt(KVTR), (data as {userWalletAddress: string, isAdmin:boolean}).isAdmin , (data as {userWalletAddress: string, isAdmin:boolean}).userWalletAddress);
     
     const txReceipt = await tx.wait();
     

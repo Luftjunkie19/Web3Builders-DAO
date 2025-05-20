@@ -137,7 +137,7 @@ const claimTokenRow= new ActionRowBuilder<ButtonBuilder>().addComponents(
 );
 
 
-const message =  await interaction.reply({
+const message = await interaction.reply({
             content:'What is your programming seniority level (noncommercial + commercial)?',
             components: [psrRow],
             withResponse: true
@@ -162,6 +162,7 @@ const message =  await interaction.reply({
         try {
         
             collector?.on('collect', async (i:any) => {
+                
                 if (i.customId === 'PSR') {
                     console.log('PSR',
                         i.values[0]);
@@ -249,7 +250,52 @@ const message =  await interaction.reply({
 
 
                 if (i.customId === 'finalStep') {
-                  
+                  const {PSR, JEXS, W3I, TKL, KVTR}=customObject;
+
+                  const getKnowledgeState=()=>{
+                    switch(questionsCorrectlyAnswered){
+                        case 8:
+                          return 7;
+                        case 7:
+                          return 6;
+                      case 6:
+                        return 5;
+                      case 5:
+                        return 4;
+                      case 4:
+                        return 3;
+                      case 3:
+                        return 2;
+                      case 2:
+                        return 1;
+                      case 1:
+                        return 0;
+                      default:
+                        return 0;
+                    }
+                  }
+
+
+                  const request = await fetch(`http://localhost:2137/gov_token/initial-distribution`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        PSR, 
+                        JEXS,
+                        W3I, 
+                        TKL, 
+                        KVTR: getKnowledgeState()
+                    }),
+                  });
+
+                  const response = await request.json();
+                  console.log(response);
+                  if(!response || response.error){ 
+                    return await i.update({content:response.error, components: []});
+                  }
+                  await i.update({content:`Congrats you have claimed your tokens !`, components: []});
             
                 }
             });
