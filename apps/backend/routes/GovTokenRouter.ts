@@ -12,7 +12,7 @@ govTokenRouter.post('/reward_member/:userAddress', rewardMember);
 
 govTokenRouter.post('/punish_member/:userAddress', punishMember);
 
-govTokenRouter.post('/intial_token_distribution/:userAddress', intialTokenDistribution);
+govTokenRouter.post('/intial_token_distribution/:memberDiscordId', intialTokenDistribution);
 
 
 

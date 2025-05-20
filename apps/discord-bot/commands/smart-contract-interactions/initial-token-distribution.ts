@@ -4,6 +4,7 @@ import { ActionRowBuilder, ButtonBuilder } from "discord.js";
 
 
 module.exports = {
+cooldown:25,
 data: new SlashCommandBuilder().setName('initial-token-distribution').setDescription('This command allows you as the member of the discord server to receive your initial tokens !'),
 async execute(interaction:any){
 
@@ -31,9 +32,6 @@ const customObject:{
     KVTR:0
 };
 
-let questionsCorrectlyAnswered:number = 0;
-
-
 const select = new StringSelectMenuBuilder().setCustomId('PSR').setPlaceholder('Select your seniorty in programming (noncommercial + commercial)')
 .addOptions(
 new StringSelectMenuOptionBuilder().setLabel('<1 year').setValue('0').setEmoji('👶🏼'),
@@ -59,25 +57,18 @@ new StringSelectMenuOptionBuilder().setLabel('3-5 years').setValue('2').setEmoji
 new StringSelectMenuOptionBuilder().setLabel('>=5 years').setValue('3').setEmoji('🤓'),
 );
 
-// const programmingLanguagesKnown = new StringSelectMenuBuilder().setCustomId('TKL').setPlaceholder('Which programming languages do you know ?')
-// .addOptions(
-// new StringSelectMenuOptionBuilder().setLabel('JavaScript').setValue('0').setEmoji('1373958358931079268'),
-// new StringSelectMenuOptionBuilder().setLabel('TypeScript').setValue('1'),
-// new StringSelectMenuOptionBuilder().setLabel('Python').setValue('1').setEmoji('1373959522313572392'),
-// new StringSelectMenuOptionBuilder().setLabel('Rust').setValue('2').setEmoji('📚'),
-// new StringSelectMenuOptionBuilder().setLabel('Solidity').setValue('3').setEmoji('1373957880864313424'),
-// new StringSelectMenuOptionBuilder().setLabel('Java').setValue('4').setEmoji('🤓'),
-// new StringSelectMenuOptionBuilder().setLabel('C#').setValue('5').setEmoji('1373959489203470376'),
-// new StringSelectMenuOptionBuilder().setLabel('Go').setValue('7').setEmoji('1373959418097700894'),
-// new StringSelectMenuOptionBuilder().setLabel('Kotlin').setValue('8').setEmoji('1373959490562691113'),
-// new StringSelectMenuOptionBuilder().setLabel('R').setValue('9').setEmoji('1373959514491064381'),
-// new StringSelectMenuOptionBuilder().setLabel('PHP').setValue('10').setEmoji('1373959487341334569'),
-// new StringSelectMenuOptionBuilder().setLabel('Assembler').setValue('11').setEmoji('⚙️'),
-// new StringSelectMenuOptionBuilder().setLabel('Django').setValue('12').setEmoji('1373961102081392774'),
-// ).setMinValues(1).setMaxValues(20);
+const programmingLanguagesKnown = new StringSelectMenuBuilder().setCustomId('TKL').setPlaceholder('If you are already programming blockchain smart contracts, how do you feel about it ?')
+.addOptions(
+new StringSelectMenuOptionBuilder().setLabel('Newbie (< 2 months)').setValue('0'),
+new StringSelectMenuOptionBuilder().setLabel('Experienced (2-6 months)').setValue('1'),
+new StringSelectMenuOptionBuilder().setLabel('Medium-advanced (6 months - 1 year)').setValue('2'),
+new StringSelectMenuOptionBuilder().setLabel('Advanced (1-3 years)').setValue('3'),
+new StringSelectMenuOptionBuilder().setLabel('Expert (4-10 years)').setValue('4'),
+);
 
 
 
+const programmingKnowledgeRow= new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(programmingLanguagesKnown);
 
 const psrRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
 
@@ -131,11 +122,41 @@ const fifthQuestionRow= new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder({'customId':'E-5', 'label':'Linea', style:ButtonStyle.Secondary}),
 );
 
-
-const claimTokenRow= new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder({'customId':'finalStep', 'label':'Provide your wallet address', style:ButtonStyle.Success})
+// Which of the following programming languages is used to develop smart contracts on Solana?
+// B-6
+const sixthQuestionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder({'customId':'A-6', 'label':'Solidity', style:ButtonStyle.Secondary}),
+    new ButtonBuilder({'customId':'B-6', 'label':'Rust', style:ButtonStyle.Success}),
+    new ButtonBuilder({'customId':'C-6', 'label':'Python', style:ButtonStyle.Primary}),
+    new ButtonBuilder({'customId':'D-6', 'label':'Java', style:ButtonStyle.Danger}),
+    new ButtonBuilder({'customId':'E-6', 'label':'Zinc', style:ButtonStyle.Primary}),
 );
 
+//Which of the following chains uses a Cairo-based VM for smart contract execution?
+// A-7
+const seventhQuestionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder({'customId':'A-7', 'label':'Starknet', style:ButtonStyle.Success}),
+    new ButtonBuilder({'customId':'B-7', 'label':'Arbitrum', style:ButtonStyle.Primary}),
+    new ButtonBuilder({'customId':'C-7', 'label':'Optimism', style:ButtonStyle.Secondary}),
+    new ButtonBuilder({'customId':'D-7', 'label':'ZkSync Era', style:ButtonStyle.Danger}),
+    new ButtonBuilder({'customId':'E-7', 'label':'Polygon PoS', style:ButtonStyle.Primary}),
+);
+
+//Which Layer 2 scaling solution uses optimistic rollups to scale Ethereum?
+// C-8
+const eigthQuestionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder({'customId':'A-8', 'label':'ZkSync Era', style:ButtonStyle.Danger}),
+    new ButtonBuilder({'customId':'B-8', 'label':'Starknet', style:ButtonStyle.Secondary}),
+    new ButtonBuilder({'customId':'C-8', 'label':'Optimism', style:ButtonStyle.Success}),
+    new ButtonBuilder({'customId':'D-8', 'label':'Polygon CDK', style:ButtonStyle.Primary}),
+    new ButtonBuilder({'customId':'E-8', 'label':'Scroll', style:ButtonStyle.Primary}),
+);
+
+const claimToken= new ButtonBuilder({'customId':'finalStep', 'label':'Claim Your Tokens', style:ButtonStyle.Success});
+
+const claimTokenRow= new ActionRowBuilder<ButtonBuilder>().addComponents(
+   claimToken
+);
 
 const message = await interaction.reply({
             content:'What is your programming seniority level (noncommercial + commercial)?',
@@ -156,16 +177,12 @@ const message = await interaction.reply({
 
 
 
-
-        const collectorFilter = (i: any) => i.user.id === interaction.user.id;
         
         try {
         
             collector?.on('collect', async (i:any) => {
-                
+
                 if (i.customId === 'PSR') {
-                    console.log('PSR',
-                        i.values[0]);
                     customObject['PSR'] = Number(i.values[0]);
                     await i.update({content:`Great ! You have selected your programming seniority level, now how about job-experience ?`, components: [
                         jexsRow
@@ -173,13 +190,18 @@ const message = await interaction.reply({
                 } 
 
                 if (i.customId === 'JEXS') {
-                    console.log('JEXS',
-                        i.values[0]);
                     customObject['JEXS'] = Number(i.values[0]);
-                    await i.update({content:`Great ! You have selected your job-experience level, Now tell us how long are you interested in Web3 (in all it's aspects) ?`, components: [
-                        web3InterestRow
+                    await i.update({content:`Great ! You have selected your job-experience level, Now tell us about your knowledge in programming languages to develop smart contracts ?`, components: [
+                        programmingKnowledgeRow
                     ]});
                   
+                }
+
+                if(i.customId === 'TKL'){
+                customObject['TKL'] = Number(i.values[0]);
+                await i.update({content:`Great, Now tell us how long are you interested in Web3 (in all it's aspects) ?`, components: [
+                   web3InterestRow 
+                ]})
                 }
 
                 if(i.customId === 'W3I'
@@ -195,7 +217,7 @@ const message = await interaction.reply({
 
                 if(i.customId === 'firstQuestion'
                 ){
-                    if(i.values[0]=== 'C-1') questionsCorrectlyAnswered++;
+                    if(i.values[0]=== 'C-1') customObject['KVTR']++;
              
                     await i.update({content:`${i.values[0] === 'C-1' ? '✅ Correct !' : '❌ Wrong'}, What does the delegatecall opcode allow a smart contract to do ?`, components: [
                         secondQuestionRow
@@ -205,7 +227,7 @@ const message = await interaction.reply({
 
                 if(i.customId === 'secondQuestion'
                 ){
-                    if(i.values[0]=== 'B-2') questionsCorrectlyAnswered++;
+                    if(i.values[0]=== 'B-2') customObject['KVTR']++;
 
                     console.log('secondQuestion',
                         i.values[0]);
@@ -219,7 +241,7 @@ const message = await interaction.reply({
                 if(i.customId === 'thirdQuestion'
                 ){
                   
-                     if(i.values[0]=== 'C-3') questionsCorrectlyAnswered++;
+                     if(i.values[0]=== 'C-3') customObject['KVTR']++;
 
                     await i.update({content:`${i.values[0] === 'C-3' ? '✅ Correct !' : '❌ Wrong'} Which of these statements about Proof of Stake is FALSE?`, 
                         components: [
@@ -230,9 +252,10 @@ const message = await interaction.reply({
             });
 
             buttonCollector?.on('collect', async (i:any) => {
-                if (i.customId.includes('-4')) {
+              try {
+                    if (i.customId.includes('-4')) {
                    
-                    if(i.customId === 'D-4') questionsCorrectlyAnswered++;
+                    if(i.customId === 'D-4') customObject['KVTR']++;
                     
                     await i.update({content:`${i.customId === 'D-4' ? `✅ Correctly answered question, one more to go ! Final Question ! Which of these technologies is fundamentally different from the others in how it scales Ethereum ?` : `❌ Wrong answer, one more to go ! Which of these technologies is fundamentally different from the others in how it scales Ethereum ?`}`, components: [
                         fifthQuestionRow
@@ -241,19 +264,37 @@ const message = await interaction.reply({
 
                 if(i.customId.includes('-5')){
                  
-                      if(i.customId === 'C-5') questionsCorrectlyAnswered++;
+                      if(i.customId === 'C-5') customObject['KVTR']++;
 
-                    await i.update({content:`${i.customId === 'C-5' ? `✅ Correctly answered question, one more to go ! You can now claim your tokens` : `❌ Wrong answer, This is already an end, you can now claim your tokens`}`, components: []});
+                    await i.update({content:`${i.customId === 'C-5' ? `✅ Correctly answered question,` : `❌ Wrong answer,`} Which of the following programming languages is used to develop smart contracts on Solana?`, components: [sixthQuestionRow]});
                 
-                    await interaction.user.send({content:`Congratulations you have passed the initial-distribution configuration, you can now claim your tokens !`, 'components':[claimTokenRow]});
                 }
 
+                if(i.customId.includes('-6')){
+                    if(i.customId === 'B-6') customObject['KVTR']++;
+
+                    await i.update({content:`${i.customId === 'B-6' ? '✅ Correct !' : '❌ Wrong'}, Which of the following chains uses a Cairo-based VM for smart contract execution ?`, components: [seventhQuestionRow]});
+                }
+
+                if(i.customId.includes('-7')){
+                    if(i.customId === 'A-7') customObject['KVTR']++;
+                
+                    await i.update({content:`${i.customId === 'A-7' ? '✅ Correct !' : '❌ Wrong'}, Which Layer 2 scaling solution uses optimistic rollups to scale Ethereum?`, components: [eigthQuestionRow]});
+                }
+
+                if(i.customId.includes('-8')){
+                    if(i.customId === 'C-8') customObject['KVTR']++;
+                
+                    await i.update({content:`Thats it now, check your Dm for more info !`, components: [claimTokenRow]});
+                
+                }
 
                 if (i.customId === 'finalStep') {
+                    console.log('finalStep', customObject);
                   const {PSR, JEXS, W3I, TKL, KVTR}=customObject;
 
                   const getKnowledgeState=()=>{
-                    switch(questionsCorrectlyAnswered){
+                    switch(KVTR){
                         case 8:
                           return 7;
                         case 7:
@@ -275,8 +316,12 @@ const message = await interaction.reply({
                     }
                   }
 
+                  
+                  await i.deferUpdate();
+                  i.message.component[0].setDisabled(true);
+                   i.message.component[0].setStyle(ButtonStyle.Secondary);
 
-                  const request = await fetch(`http://localhost:2137/gov_token/initial-distribution`, {
+                  const request = await Promise.race([await fetch(`http://localhost:2137/gov_token/intial_token_distribution/${interaction.user.id}`, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -288,16 +333,24 @@ const message = await interaction.reply({
                         TKL, 
                         KVTR: getKnowledgeState()
                     }),
-                  });
+                  })])
 
                   const response = await request.json();
                   console.log(response);
-                  if(!response || response.error){ 
-                    return await i.update({content:response.error, components: []});
-                  }
-                  await i.update({content:`Congrats you have claimed your tokens !`, components: []});
+                  
             
+
+                  if(!response || response.error){ 
+                    return await i.followUp({content:`Something went wrong, please try again. ${response.error}`, components: []});
+                  }
+                  await i.update({content:`Great ! Congratulations, you have gone through the initial token distribution process ! Now check your DMs, Bot has sent you a message 💘`, components: []})
+
+            await i.user.send({content:`Hello ${interaction.user.globalName} ! I'm a Builder Bot, I'm here to announce you are officially a part of DAO ! Congrats and wee see us on the proposal creation, voting etc. and more 😎`, components: []});
                 }
+              }catch(err){
+                console.log(err);
+                await i.followUp({content:`Something went wrong, please try again.`, components: []});
+              }
             });
 
      

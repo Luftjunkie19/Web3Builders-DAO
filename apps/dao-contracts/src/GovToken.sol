@@ -29,7 +29,6 @@
   }
 
   enum TechnologyKnowledgeLevel {
-    NOT_SELECTED,
     LOW_KNOWLEDGE,
     HIGHER_LOW_KNOWLEDGE,
     MEDIUM_KNOWLEDGE,
@@ -78,7 +77,6 @@
         jexsOptions[TokenReceiveLevel.HIGH] = 90;
 
       // TKL options
-      tklOptions[TechnologyKnowledgeLevel.NOT_SELECTED] = 0;
       tklOptions[TechnologyKnowledgeLevel.LOW_KNOWLEDGE] = 50;
       tklOptions[TechnologyKnowledgeLevel.HIGHER_LOW_KNOWLEDGE] = 75;
       tklOptions[TechnologyKnowledgeLevel.MEDIUM_KNOWLEDGE] = 200;

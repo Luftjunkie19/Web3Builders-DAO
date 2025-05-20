@@ -30,7 +30,6 @@ app.use(cors());
 app.use(express.json());
 
 
-
 // app.use(cors(corsOptions));
 app.use('/governance',governanceRouter);
 app.use('/gov_token', govTokenRouter);
