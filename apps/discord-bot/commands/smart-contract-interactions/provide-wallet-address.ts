@@ -1,7 +1,5 @@
 import { ChatInputCommandInteraction, ModalBuilder, SlashCommandBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { ActionRowBuilder, ButtonBuilder } from "discord.js";
-import { client } from '../..';
-
+import { ActionRowBuilder } from "discord.js";
 
 module.exports = {
 data: new SlashCommandBuilder().setName('register-wallet').setDescription('This command registers you with your wallet to DB for future use !'),

@@ -35,7 +35,9 @@ module.exports={
         
         return;
         }
-        
+
+
+
         if(interaction.isChatInputCommand()){
             const command = interaction.client.commands.get(interaction.commandName);
           if (!command) {

@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Events, Collection, Message, Interaction, CacheType, BaseInteraction, MessageFlags, GatewayOpcodes } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, Message, Partials } from 'discord.js';
 
 // Require the necessary discord.js classes
 const dotenv = require('dotenv');
@@ -9,7 +9,6 @@ const { token } = require('./discordConfig.json');
 dotenv.config();
 
 
-
 export const client = new Client({ intents: [
     GatewayIntentBits.Guilds, 
     GatewayIntentBits.GuildMessages, 
@@ -17,16 +16,19 @@ export const client = new Client({ intents: [
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildPresences,
-]  });
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildMessageTyping
+],
+partials:[Partials.Channel, Partials.GuildMember, Partials.Message, Partials.Reaction, Partials.User]
+
+});
 client.commands = new Collection();
 client.cooldowns= new Collection();
 
 
 
 
-client.on('messageCreate', async(message:Message) => {
-   console.log(`Message from ${message.author.username}: ${message.content}`); 
-})
+
 
 
 const folderPath = path.join(__dirname, 'commands');
@@ -56,12 +58,12 @@ for (const file of eventFiles) {
     const event = require(filePath);
     if (event.once) {
         client.once(event.name, (...args:any) => {
-            console.log(args);
             event.execute(...args);
         });
     }
     else {
         client.on(event.name, (...args:any) => {
+            console.log(event.name);
             console.log(args);
             event.execute(...args);
         });

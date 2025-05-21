@@ -318,8 +318,7 @@ const message = await interaction.reply({
 
                   
                   await i.deferUpdate();
-                  i.message.component[0].setDisabled(true);
-                   i.message.component[0].setStyle(ButtonStyle.Secondary);
+       
 
                   const request = await Promise.race([await fetch(`http://localhost:2137/gov_token/intial_token_distribution/${interaction.user.id}`, {
                     method: 'POST',
@@ -343,7 +342,7 @@ const message = await interaction.reply({
                   if(!response || response.error){ 
                     return await i.followUp({content:`Something went wrong, please try again. ${response.error}`, components: []});
                   }
-                  await i.update({content:`Great ! Congratulations, you have gone through the initial token distribution process ! Now check your DMs, Bot has sent you a message 💘`, components: []})
+                  await i.editReply({content:`Great ! Congratulations, you have gone through the initial token distribution process ! Now check your DMs, Bot has sent you a message 💘`, components: []})
 
             await i.user.send({content:`Hello ${interaction.user.globalName} ! I'm a Builder Bot, I'm here to announce you are officially a part of DAO ! Congrats and wee see us on the proposal creation, voting etc. and more 😎`, components: []});
                 }
